@@ -12,8 +12,8 @@ const {
   validateAttendanceMarking
 } = require('../controllers/enrollmentAttendanceController');
 
-const authMiddleware = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const authMiddleware = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 
 /**
  * @swagger

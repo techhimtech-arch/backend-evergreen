@@ -12,8 +12,8 @@ const {
   validatePromotion,
 } = require('../controllers/enrollmentController');
 
-const protect = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const protect = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 
 // Apply protection to all routes
 router.use(protect);

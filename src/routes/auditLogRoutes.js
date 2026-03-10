@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middlewares/authMiddleware');
-const roleGuard = require('../middlewares/roleGuard');
+const authMiddleware = require('../middleware/authMiddleware');
+const roleGuard = require('../middleware/roleGuard');
 const {
   getAuditLogs,
   getAuditLogById,

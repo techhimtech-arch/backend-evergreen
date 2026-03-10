@@ -5,8 +5,8 @@ const {
   recordFeePayment,
   getStudentFeeDetails,
 } = require('../controllers/feesController');
-const protect = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const protect = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 const { validateCreateFeeStructure } = require('../validators/feeValidator');
 
 const router = express.Router();

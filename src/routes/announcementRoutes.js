@@ -11,8 +11,8 @@ const {
   addComment,
   getAnnouncementStats
 } = require('../controllers/announcementController');
-const protect = require('../middlewares/authMiddleware');
-const { validateAnnouncement } = require('../middlewares/validationMiddleware');
+const protect = require('../middleware/authMiddleware');
+const { validateAnnouncement } = require('../middleware/validationMiddleware');
 
 // Apply auth middleware to all routes
 router.use(protect);

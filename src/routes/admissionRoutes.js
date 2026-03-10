@@ -9,8 +9,8 @@ const {
   validateAdmission
 } = require('../controllers/admissionController');
 
-const authMiddleware = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const authMiddleware = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 
 /**
  * @swagger

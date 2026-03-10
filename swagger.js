@@ -10,7 +10,7 @@ const options = {
       description: 'Multi-school SaaS backend APIs',
     },
     servers: [
-      { url: 'https://sms-backend-d19v.onrender.com/api/v1', description: 'Production' },
+      // { url: 'https://sms-backend-d19v.onrender.com/api/v1', description: 'Production' },
       { url: 'http://localhost:5000/api/v1', description: 'Local Development' }
     ],
     components: {

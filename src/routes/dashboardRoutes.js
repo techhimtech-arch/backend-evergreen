@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { getDashboardStats } = require('../controllers/dashboardController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const authMiddleware = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 
 /**
  * @swagger

@@ -9,8 +9,8 @@ const {
   getChildFees,
   getChildResults,
 } = require('../controllers/parentController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const authMiddleware = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 
 const router = express.Router();
 

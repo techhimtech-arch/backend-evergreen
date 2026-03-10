@@ -5,8 +5,8 @@ const {
   getAttendance,
   deleteAttendance,
 } = require('../controllers/attendanceController');
-const protect = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const protect = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 const { check, validationResult } = require('express-validator');
 
 // Validation middleware helper

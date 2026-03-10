@@ -7,8 +7,8 @@ const {
   deleteAssignment,
   getAssignmentsByTeacher
 } = require('../controllers/teacherAssignmentController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const authMiddleware = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 const { validateCreateAssignment, validateUpdateAssignment } = require('../validators/teacherAssignmentValidator');
 
 const router = express.Router();

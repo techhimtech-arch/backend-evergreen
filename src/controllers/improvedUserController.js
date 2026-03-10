@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const logger = require('../utils/logger');
-const { validations, handleValidationErrors } = require('../middlewares/validationMiddleware');
+const { validations, handleValidationErrors } = require('../middleware/validationMiddleware');
 
 /**
  * @desc    Create new user

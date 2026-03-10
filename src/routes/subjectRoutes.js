@@ -6,8 +6,8 @@ const {
   updateSubject,
   deleteSubject,
 } = require('../controllers/subjectController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const authMiddleware = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 
 const router = express.Router();
 

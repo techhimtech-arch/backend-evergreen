@@ -1,35 +1,34 @@
-require('dotenv').config();
-
-// Validate environment variables FIRST (before loading app)
-const validateEnv = require('./config/validateEnv');
-validateEnv();
+console.log("🚀 Starting Server...");
 
 const app = require('./app');
-const connectDB = require('./config/db');
-const logger = require('./utils/logger');
+const config = require('./config/env');
+const connectDB = require('./config/database');
 
-const PORT = process.env.PORT || 5000;
+async function startServer() {
+  try {
 
-// Connect to database
-connectDB();
+    console.log("🔄 Connecting to MongoDB...");
+    await connectDB();
+    console.log("✅ MongoDB connected");
+console.log("PORT from config:", config.PORT);
 
-// Start the server
-const server = app.listen(PORT, () => {
-  logger.info('Server started', {
-    port: PORT,
-    apiDocs: `http://localhost:${PORT}/api-docs`,
-    security: ['Helmet', 'Rate Limiting', 'CORS'],
-  });
-});
+const PORT = config.port || 5000;
+   
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  logger.error('Unhandled Rejection', { message: err.message, stack: err.stack });
-  server.close(() => process.exit(1));
-});
+    app.listen(PORT, () => {
+      console.log("=================================");
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${config.env}`);
+      console.log(`📡 Health Check: http://localhost:${PORT}/health`);
+      console.log(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
+      console.log("=================================");
+    });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  logger.error('Uncaught Exception', { message: err.message, stack: err.stack });
-  process.exit(1);
-});
+  } catch (error) {
+    console.error("❌ Server startup failed:");
+    console.error(error);
+    process.exit(1);
+  }
+}
+
+startServer();

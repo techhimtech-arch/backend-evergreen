@@ -10,7 +10,7 @@ const {
   requestPasswordReset, 
   resetPassword 
 } = require('../controllers/authController');
-const authMiddleware = require('../middlewares/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const { validateRegister, validateLogin } = require('../validators/authValidator');
 const router = express.Router();
 const User = require('../models/User');

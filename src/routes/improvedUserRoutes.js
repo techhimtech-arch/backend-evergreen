@@ -8,8 +8,8 @@ const {
   deleteUser,
   getUserStats
 } = require('../controllers/improvedUserController');
-const authMiddleware = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const authMiddleware = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 
 /**
  * @swagger

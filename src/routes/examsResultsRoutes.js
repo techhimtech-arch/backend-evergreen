@@ -5,8 +5,8 @@ const {
   addResult,
   getStudentResults,
 } = require('../controllers/examsResultsController');
-const protect = require('../middlewares/authMiddleware');
-const authorizeRoles = require('../middlewares/roleAuthorization');
+const protect = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/roleAuthorization');
 const { check, validationResult } = require('express-validator');
 
 // Validation middleware helper
