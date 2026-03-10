@@ -15,7 +15,7 @@ const refreshTokenSchema = new mongoose.Schema(
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'School',
-      required: true,
+      required: false, // Make optional for superadmin users
     },
     expiresAt: {
       type: Date,

@@ -2,10 +2,15 @@ const { body } = require('express-validator');
 const { customValidations } = require('../../middleware/validation.middleware');
 
 const registerValidation = [
-  body('name')
+  body('firstName')
     .trim()
     .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+    .withMessage('First name must be between 2 and 50 characters'),
+  
+  body('lastName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters'),
   
   body('email')
     .isEmail()
@@ -22,10 +27,15 @@ const registerValidation = [
       return true;
     }),
   
-  body('role')
-    .optional()
-    .isIn(['superadmin', 'school_admin', 'teacher', 'accountant', 'parent', 'student'])
-    .withMessage('Invalid role'),
+  body('roleId')
+    .notEmpty()
+    .withMessage('Role ID is required')
+    .custom((value) => {
+      if (!customValidations.isValidObjectId(value)) {
+        throw new Error('Invalid role ID');
+      }
+      return true;
+    }),
   
   body('schoolId')
     .optional()

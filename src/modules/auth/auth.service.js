@@ -13,7 +13,7 @@ class AuthService {
    * Register a new user
    */
   async register(userData, requestInfo = {}) {
-    const { name, email, password, role = 'student', schoolId } = userData;
+    const { firstName, lastName, email, passwordHash, roleId, schoolId } = userData;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -21,25 +21,26 @@ class AuthService {
       throw new Error('User with this email already exists');
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password);
-
-    // Create user
+    // Create user (password will be hashed by pre-save middleware)
     const user = new User({
-      name,
+      firstName,
+      lastName,
       email,
-      password: hashedPassword,
-      role,
+      passwordHash, // Will be hashed by pre-save middleware
+      roleId,
       schoolId,
     });
 
     await user.save();
 
+    // Get user with role for response
+    const userWithRole = await User.findById(user._id).populate('roleId');
+
     // Log registration
     await LoginAudit.logLoginAttempt({
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: userWithRole.roleId.name,
       schoolId: user.schoolId,
       action: 'login_success',
       ipAddress: requestInfo.ipAddress,
@@ -50,16 +51,19 @@ class AuthService {
     logger.info('User registered successfully', {
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: userWithRole.roleId.name,
     });
 
     return {
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
-        role: user.role,
+        role: userWithRole.roleId.name,
+        roleId: user.roleId,
         schoolId: user.schoolId,
+        isActive: user.isActive,
       },
     };
   }
@@ -68,8 +72,8 @@ class AuthService {
    * User login
    */
   async login(email, password, requestInfo = {}) {
-    // Find user
-    const user = await User.findOne({ email });
+    // Find user with role
+    const user = await User.findByEmailWithRole(email);
     if (!user) {
       await this.logFailedLogin(email, 'invalid_credentials', requestInfo);
       throw new Error('Invalid credentials');
@@ -82,18 +86,23 @@ class AuthService {
     }
 
     // Verify password
-    const isPasswordValid = await comparePassword(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       await this.logFailedLogin(email, 'invalid_credentials', requestInfo);
       throw new Error('Invalid credentials');
     }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
 
     // Generate tokens
     const tokenFamily = uuidv4();
     const payload = {
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
+      roleId: user.roleId._id,
     };
 
     const accessToken = generateAccessToken(payload);
@@ -106,7 +115,7 @@ class AuthService {
     const refreshTokenDoc = new RefreshToken({
       token: refreshToken,
       userId: user._id,
-      schoolId: user.schoolId,
+      schoolId: user.schoolId || null, // Allow null for superadmin
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       family: tokenFamily,
       userAgent: requestInfo.userAgent,
@@ -119,7 +128,7 @@ class AuthService {
     await LoginAudit.logLoginAttempt({
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
       schoolId: user.schoolId,
       action: 'login_success',
       ipAddress: requestInfo.ipAddress,
@@ -132,7 +141,7 @@ class AuthService {
     logger.info('User logged in successfully', {
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
       ipAddress: requestInfo.ipAddress,
     });
 
@@ -141,10 +150,13 @@ class AuthService {
       refreshToken,
       user: {
         id: user._id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
-        role: user.role,
+        role: user.roleId.name,
+        roleId: user.roleId._id,
         schoolId: user.schoolId,
+        lastLogin: user.lastLogin,
       },
     };
   }
@@ -162,8 +174,8 @@ class AuthService {
       throw new Error('Invalid or expired refresh token');
     }
 
-    // Find user
-    const user = await User.findById(decoded.userId);
+    // Find user with role
+    const user = await User.findById(decoded.userId).populate('roleId');
     if (!user || !user.isActive) {
       // Revoke the token family for security
       await RefreshToken.revokeFamily(decoded.family, 'security');
@@ -174,7 +186,8 @@ class AuthService {
     const newPayload = {
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
+      roleId: user.roleId._id,
     };
 
     const newAccessToken = generateAccessToken(newPayload);
@@ -190,7 +203,7 @@ class AuthService {
     const newTokenDoc = new RefreshToken({
       token: newRefreshToken,
       userId: user._id,
-      schoolId: user.schoolId,
+      schoolId: user.schoolId || null, // Allow null for superadmin
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       family: decoded.family,
       userAgent: requestInfo.userAgent,
@@ -203,7 +216,7 @@ class AuthService {
     await LoginAudit.logLoginAttempt({
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
       schoolId: user.schoolId,
       action: 'token_refresh',
       ipAddress: requestInfo.ipAddress,
@@ -263,7 +276,7 @@ class AuthService {
    * Logout from all devices
    */
   async logoutAll(userId, requestInfo = {}) {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate('roleId');
     if (!user) {
       throw new Error('User not found');
     }
@@ -275,7 +288,7 @@ class AuthService {
     await LoginAudit.logLoginAttempt({
       userId,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
       schoolId: user.schoolId,
       action: 'logout',
       ipAddress: requestInfo.ipAddress,
@@ -384,11 +397,8 @@ class AuthService {
       throw new Error('Invalid or expired reset token');
     }
 
-    // Hash new password
-    const hashedPassword = await hashPassword(newPassword);
-
-    // Update password and clear reset fields
-    user.password = hashedPassword;
+    // Update password (will be hashed by pre-save middleware)
+    user.passwordHash = newPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
@@ -396,11 +406,14 @@ class AuthService {
     // Revoke all user tokens for security
     await RefreshToken.revokeAllUserTokens(user._id, 'security');
 
+    // Get user role for logging
+    const userWithRole = await User.findById(user._id).populate('roleId');
+
     // Log password reset
     await LoginAudit.logLoginAttempt({
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: userWithRole.roleId.name,
       schoolId: user.schoolId,
       action: 'password_reset',
       ipAddress: null,

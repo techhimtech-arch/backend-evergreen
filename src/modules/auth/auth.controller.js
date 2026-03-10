@@ -129,7 +129,7 @@ class AuthController {
    */
   getProfile = asyncHandler(async (req, res) => {
     const User = require('../../models/User');
-    const user = await User.findById(req.user.userId).select('-password');
+    const user = await User.findById(req.user.userId).populate('roleId').select('-passwordHash');
 
     if (!user) {
       return sendError(res, 404, 'User not found');
@@ -137,11 +137,15 @@ class AuthController {
 
     return sendSuccess(res, 200, 'Profile retrieved', {
       id: user._id,
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
+      roleId: user.roleId._id,
       schoolId: user.schoolId,
       isActive: user.isActive,
+      emailVerified: user.emailVerified,
+      lastLogin: user.lastLogin,
       createdAt: user.createdAt,
     });
   });
@@ -151,7 +155,7 @@ class AuthController {
    */
   updateProfile = asyncHandler(async (req, res) => {
     const User = require('../../models/User');
-    const { name, email } = req.body;
+    const { firstName, lastName, email } = req.body;
 
     const user = await User.findById(req.user.userId);
     if (!user) {
@@ -167,8 +171,12 @@ class AuthController {
       user.email = email;
     }
 
-    if (name) {
-      user.name = name;
+    if (firstName) {
+      user.firstName = firstName;
+    }
+
+    if (lastName) {
+      user.lastName = lastName;
     }
 
     await user.save();
@@ -180,11 +188,9 @@ class AuthController {
 
     return sendSuccess(res, 200, 'Profile updated successfully', {
       id: user._id,
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      role: user.role,
-      schoolId: user.schoolId,
-      isActive: user.isActive,
       updatedAt: user.updatedAt,
     });
   });
@@ -200,18 +206,15 @@ class AuthController {
     if (!user) {
       return sendError(res, 404, 'User not found');
     }
-
-    const { comparePassword, hashPassword } = require('../../utils/password');
     
     // Verify current password
-    const isCurrentPasswordValid = await comparePassword(currentPassword, user.password);
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
     if (!isCurrentPasswordValid) {
       return sendError(res, 400, 'Current password is incorrect');
     }
 
-    // Hash new password
-    const hashedNewPassword = await hashPassword(newPassword);
-    user.password = hashedNewPassword;
+    // Update password (will be hashed by pre-save middleware)
+    user.passwordHash = newPassword;
     await user.save();
 
     // Revoke all tokens for security

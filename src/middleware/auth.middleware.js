@@ -16,8 +16,8 @@ const authenticate = async (req, res, next) => {
 
     const decoded = verifyAccessToken(token);
     
-    // Find user and verify they exist and are active
-    const user = await User.findById(decoded.userId).select('-password');
+    // Find user with role and verify they exist and are active
+    const user = await User.findById(decoded.userId).populate('roleId').select('-passwordHash');
     
     if (!user) {
       return sendUnauthorized(res, 'User not found');
@@ -31,14 +31,15 @@ const authenticate = async (req, res, next) => {
     req.user = {
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
+      roleId: user.roleId._id,
       schoolId: user.schoolId,
     };
 
     logger.info('User authenticated successfully', {
       userId: user._id,
       email: user.email,
-      role: user.role,
+      role: user.roleId.name,
     });
 
     next();
@@ -97,13 +98,14 @@ const optionalAuth = async (req, res, next) => {
     
     if (token) {
       const decoded = verifyAccessToken(token);
-      const user = await User.findById(decoded.userId).select('-password');
+      const user = await User.findById(decoded.userId).populate('roleId').select('-passwordHash');
       
       if (user && user.isActive) {
         req.user = {
           userId: user._id,
           email: user.email,
-          role: user.role,
+          role: user.roleId.name,
+          roleId: user.roleId._id,
           schoolId: user.schoolId,
         };
       }

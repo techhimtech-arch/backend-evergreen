@@ -216,6 +216,47 @@ class UsersController {
       role: user.role,
     });
   });
+
+  /**
+   * Get current user profile
+   */
+  getProfile = asyncHandler(async (req, res) => {
+    const User = require('../../models/User');
+    
+    const user = await User.findById(req.user.userId).select('-password');
+    
+    if (!user) {
+      return sendNotFound(res, 'User not found');
+    }
+
+    return sendSuccess(res, 200, 'Profile retrieved successfully', user);
+  });
+
+  /**
+   * Update current user profile
+   */
+  updateProfile = asyncHandler(async (req, res) => {
+    const User = require('../../models/User');
+    const { firstName, lastName, email } = req.body;
+    
+    // Build update object
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return sendNotFound(res, 'User not found');
+    }
+
+    return sendSuccess(res, 200, 'Profile updated successfully', user);
+  });
 }
 
 module.exports = new UsersController();
