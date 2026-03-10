@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
 // Ensure related models are registered
-require('./UserType');
+require('./Organization');
 require('./Role');
 
 const userSchema = new mongoose.Schema(
@@ -48,10 +48,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-    userTypeId: {
+    organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'UserType',
+      ref: "Organization",
       required: true
+    },
+    userType: {
+      type: String,
+      enum: ["SUPER_ADMIN", "ORG_ADMIN", "VOLUNTEER", "CITIZEN"],
+      default: "CITIZEN"
     },
     status: {
       type: String,
@@ -74,10 +79,6 @@ const userSchema = new mongoose.Schema(
     },
     emailVerificationToken: {
       type: String
-    },
-    schoolId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'School',
     }
   },
   { 
@@ -96,10 +97,10 @@ const userSchema = new mongoose.Schema(
 
 // Indexes for efficient queries
 userSchema.index({ email: 1 });
-userSchema.index({ userTypeId: 1 });
+userSchema.index({ organizationId: 1 });
+userSchema.index({ userType: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ uuid: 1 });
-userSchema.index({ schoolId: 1 });
 userSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to hash password
@@ -125,10 +126,23 @@ userSchema.methods.getFullName = function() {
   return `${this.firstName} ${this.lastName}`;
 };
 
-// Static method to find by email with user type and roles
+// Static method to find by email with organization and roles
 userSchema.statics.findByEmailWithRoles = function(email) {
   return this.findOne({ email, status: 'ACTIVE' })
-    .populate('userTypeId')
+    .populate('organizationId')
+    .populate({
+      path: 'roles',
+      populate: {
+        path: 'roleId',
+        model: 'Role'
+      }
+    });
+};
+
+// Static method to find active users by organization
+userSchema.statics.findActiveByOrganization = function(organizationId) {
+  return this.find({ organizationId, status: 'ACTIVE' })
+    .populate('organizationId')
     .populate({
       path: 'roles',
       populate: {
@@ -139,12 +153,9 @@ userSchema.statics.findByEmailWithRoles = function(email) {
 };
 
 // Static method to find active users by user type
-userSchema.statics.findActiveByUserType = function(userTypeName) {
-  return this.find({ status: 'ACTIVE' })
-    .populate({
-      path: 'userTypeId',
-      match: { name: userTypeName }
-    })
+userSchema.statics.findActiveByUserType = function(userType) {
+  return this.find({ userType, status: 'ACTIVE' })
+    .populate('organizationId')
     .populate({
       path: 'roles',
       populate: {
@@ -157,7 +168,7 @@ userSchema.statics.findActiveByUserType = function(userTypeName) {
 // Static method to find active users by role
 userSchema.statics.findActiveByRole = function(roleName) {
   return this.find({ status: 'ACTIVE' })
-    .populate('userTypeId')
+    .populate('organizationId')
     .populate({
       path: 'roles',
       populate: {
