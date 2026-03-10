@@ -1,11 +1,28 @@
-const { body, query } = require('express-validator');
+const { body, query, param, validationResult } = require('express-validator');
 const { customValidations } = require('../../middleware/validation.middleware');
 
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: errors.array()
+    });
+  }
+  next();
+};
+
 const createUserValidation = [
-  body('name')
+  body('firstName')
     .trim()
     .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+    .withMessage('First name must be between 2 and 50 characters'),
+  
+  body('lastName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters'),
   
   body('email')
     .isEmail()
@@ -22,30 +39,49 @@ const createUserValidation = [
       return true;
     }),
   
-  body('role')
-    .isIn(['superadmin', 'school_admin', 'teacher', 'accountant', 'parent', 'student'])
-    .withMessage('Invalid role'),
+  body('userTypeId')
+    .isMongoId()
+    .withMessage('Valid user type ID is required'),
+  
+  body('phoneNumber')
+    .optional()
+    .matches(/^[\+]?[1-9][\d]{0,15}$/)
+    .withMessage('Please enter a valid phone number'),
+  
+  body('profileImage')
+    .optional()
+    .isURL()
+    .withMessage('Profile image must be a valid URL'),
   
   body('schoolId')
-    .custom((value) => {
-      if (value && !customValidations.isValidObjectId(value)) {
-        throw new Error('Invalid school ID');
-      }
-      return true;
-    }),
-  
-  body('isActive')
     .optional()
-    .isBoolean()
-    .withMessage('isActive must be a boolean'),
+    .isMongoId()
+    .withMessage('Invalid school ID'),
+  
+  body('status')
+    .optional()
+    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED'])
+    .withMessage('Status must be one of: ACTIVE, SUSPENDED, DELETED'),
+  
+  handleValidationErrors
 ];
 
 const updateUserValidation = [
-  body('name')
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid user ID'),
+  
+  body('firstName')
     .optional()
     .trim()
     .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+    .withMessage('First name must be between 2 and 50 characters'),
+  
+  body('lastName')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters'),
   
   body('email')
     .optional()
@@ -53,24 +89,32 @@ const updateUserValidation = [
     .withMessage('Valid email is required')
     .normalizeEmail(),
   
-  body('role')
+  body('phoneNumber')
     .optional()
-    .isIn(['superadmin', 'school_admin', 'teacher', 'accountant', 'parent', 'student'])
-    .withMessage('Invalid role'),
+    .matches(/^[\+]?[1-9][\d]{0,15}$/)
+    .withMessage('Please enter a valid phone number'),
+  
+  body('profileImage')
+    .optional()
+    .isURL()
+    .withMessage('Profile image must be a valid URL'),
+  
+  body('userTypeId')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid user type ID'),
   
   body('schoolId')
     .optional()
-    .custom((value) => {
-      if (value && !customValidations.isValidObjectId(value)) {
-        throw new Error('Invalid school ID');
-      }
-      return true;
-    }),
+    .isMongoId()
+    .withMessage('Invalid school ID'),
   
-  body('isActive')
+  body('status')
     .optional()
-    .isBoolean()
-    .withMessage('isActive must be a boolean'),
+    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED'])
+    .withMessage('Status must be one of: ACTIVE, SUSPENDED, DELETED'),
+  
+  handleValidationErrors
 ];
 
 const getUsersValidation = [
@@ -84,39 +128,64 @@ const getUsersValidation = [
     .isInt({ min: 1, max: 100 })
     .withMessage('Limit must be between 1 and 100'),
   
-  query('role')
+  query('userType')
     .optional()
-    .isIn(['superadmin', 'school_admin', 'teacher', 'accountant', 'parent', 'student'])
-    .withMessage('Invalid role filter'),
+    .isIn(['ADMIN', 'STAFF', 'CUSTOMER', 'PARTNER'])
+    .withMessage('Invalid user type filter'),
   
-  query('isActive')
+  query('status')
     .optional()
-    .isBoolean()
-    .withMessage('isActive filter must be a boolean'),
+    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED'])
+    .withMessage('Status filter must be one of: ACTIVE, SUSPENDED, DELETED'),
   
   query('schoolId')
     .optional()
-    .custom((value) => {
-      if (value && !customValidations.isValidObjectId(value)) {
-        throw new Error('Invalid school ID');
-      }
-      return true;
-    }),
+    .isMongoId()
+    .withMessage('Invalid school ID'),
   
   query('search')
     .optional()
     .isLength({ min: 1, max: 100 })
     .withMessage('Search term must be between 1 and 100 characters'),
+  
+  handleValidationErrors
+];
+
+const assignRoleValidation = [
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid user ID'),
+  
+  body('roleId')
+    .isMongoId()
+    .withMessage('Valid role ID is required'),
+  
+  body('expiresAt')
+    .optional()
+    .isISO8601()
+    .withMessage('expiresAt must be a valid date'),
+  
+  handleValidationErrors
+];
+
+const removeRoleValidation = [
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid user ID'),
+  
+  body('roleId')
+    .isMongoId()
+    .withMessage('Valid role ID is required'),
+  
+  handleValidationErrors
 ];
 
 const userIdValidation = [
-  body('userId')
-    .custom((value) => {
-      if (!customValidations.isValidObjectId(value)) {
-        throw new Error('Invalid user ID');
-      }
-      return true;
-    }),
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid user ID'),
+  
+  handleValidationErrors
 ];
 
 module.exports = {
@@ -124,4 +193,6 @@ module.exports = {
   updateUserValidation,
   getUsersValidation,
   userIdValidation,
+  assignRoleValidation,
+  removeRoleValidation,
 };

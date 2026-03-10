@@ -1,22 +1,18 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { v4: uuidv4 } = require('uuid');
 
-// Ensure Role model is registered
+// Ensure related models are registered
+require('./UserType');
 require('./Role');
 
 const userSchema = new mongoose.Schema(
   {
-    firstName: {
+    uuid: {
       type: String,
       required: true,
-      trim: true,
-      maxlength: 50
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: 50
+      unique: true,
+      default: () => uuidv4()
     },
     email: {
       type: String,
@@ -31,16 +27,43 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6
     },
-    roleId: {
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 50
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 50
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+      match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid phone number']
+    },
+    profileImage: {
+      type: String,
+      trim: true
+    },
+    userTypeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
+      ref: 'UserType',
       required: true
     },
-    isActive: {
-      type: Boolean,
-      default: true
+    status: {
+      type: String,
+      required: true,
+      enum: ['ACTIVE', 'SUSPENDED', 'DELETED'],
+      default: 'ACTIVE'
     },
-    lastLogin: {
+    emailVerified: {
+      type: Boolean,
+      default: false
+    },
+    lastLoginAt: {
       type: Date
     },
     passwordResetToken: {
@@ -48,10 +71,6 @@ const userSchema = new mongoose.Schema(
     },
     passwordResetExpires: {
       type: Date
-    },
-    emailVerified: {
-      type: Boolean,
-      default: false
     },
     emailVerificationToken: {
       type: String
@@ -77,9 +96,11 @@ const userSchema = new mongoose.Schema(
 
 // Indexes for efficient queries
 userSchema.index({ email: 1 });
-userSchema.index({ roleId: 1 });
-userSchema.index({ isActive: 1 });
+userSchema.index({ userTypeId: 1 });
+userSchema.index({ status: 1 });
+userSchema.index({ uuid: 1 });
 userSchema.index({ schoolId: 1 });
+userSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {
@@ -104,19 +125,54 @@ userSchema.methods.getFullName = function() {
   return `${this.firstName} ${this.lastName}`;
 };
 
-// Static method to find by email with role
-userSchema.statics.findByEmailWithRole = function(email) {
-  return this.findOne({ email, isActive: true }).populate('roleId');
+// Static method to find by email with user type and roles
+userSchema.statics.findByEmailWithRoles = function(email) {
+  return this.findOne({ email, status: 'ACTIVE' })
+    .populate('userTypeId')
+    .populate({
+      path: 'roles',
+      populate: {
+        path: 'roleId',
+        model: 'Role'
+      }
+    });
+};
+
+// Static method to find active users by user type
+userSchema.statics.findActiveByUserType = function(userTypeName) {
+  return this.find({ status: 'ACTIVE' })
+    .populate({
+      path: 'userTypeId',
+      match: { name: userTypeName }
+    })
+    .populate({
+      path: 'roles',
+      populate: {
+        path: 'roleId',
+        model: 'Role'
+      }
+    });
 };
 
 // Static method to find active users by role
 userSchema.statics.findActiveByRole = function(roleName) {
-  return this.find({ isActive: true })
+  return this.find({ status: 'ACTIVE' })
+    .populate('userTypeId')
     .populate({
-      path: 'roleId',
-      match: { name: roleName, isActive: true }
+      path: 'roles',
+      populate: {
+        path: 'roleId',
+        match: { name: roleName, isActive: true }
+      }
     });
 };
+
+// Virtual for roles
+userSchema.virtual('roles', {
+  ref: 'UserRole',
+  localField: '_id',
+  foreignField: 'userId'
+});
 
 const User = mongoose.model('User', userSchema);
 

@@ -50,6 +50,7 @@ try {
   app.use('/api/auth', require('./modules/auth/auth.routes'));
   app.use('/api/users', require('./modules/users/users.routes'));
   app.use('/api/roles', require('./modules/roles/roles.routes'));
+  app.use('/api/permissions', require('./modules/permissions/permissions.routes'));
   console.log("✅ API routes loaded");
 
   // Swagger documentation

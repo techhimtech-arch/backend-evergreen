@@ -10,9 +10,9 @@ const loginAuditSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  role: {
-    type: String,
-    required: true,
+  userTypeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'UserType',
   },
   schoolId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -73,6 +73,7 @@ loginAuditSchema.index({ action: 1, createdAt: -1 });
 loginAuditSchema.index({ ipAddress: 1, createdAt: -1 });
 loginAuditSchema.index({ success: 1, createdAt: -1 });
 loginAuditSchema.index({ schoolId: 1, createdAt: -1 });
+loginAuditSchema.index({ userTypeId: 1, createdAt: -1 });
 
 // TTL index - automatically delete documents after 1 year
 loginAuditSchema.index({ createdAt: 1 }, { expireAfterSeconds: 365 * 24 * 60 * 60 });

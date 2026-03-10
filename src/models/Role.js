@@ -1,84 +1,23 @@
 const mongoose = require('mongoose');
 
+// Ensure related models are registered
+require('./Permission');
+
 const roleSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
     unique: true,
-    enum: ['superadmin', 'school_admin', 'teacher', 'accountant', 'parent', 'student'],
+    uppercase: true,
     trim: true,
+    enum: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'EDITOR', 'USER']
   },
   description: {
     type: String,
     required: true,
     trim: true,
+    maxlength: 500
   },
-  permissions: [{
-    type: String,
-    enum: [
-      // User management
-      'users:create',
-      'users:read',
-      'users:update',
-      'users:delete',
-      
-      // Role management
-      'roles:create',
-      'roles:read',
-      'roles:update',
-      'roles:delete',
-      
-      // School management
-      'school:create',
-      'school:read',
-      'school:update',
-      'school:delete',
-      
-      // Class management
-      'classes:create',
-      'classes:read',
-      'classes:update',
-      'classes:delete',
-      
-      // Student management
-      'students:create',
-      'students:read',
-      'students:update',
-      'students:delete',
-      
-      // Teacher management
-      'teachers:create',
-      'teachers:read',
-      'teachers:update',
-      'teachers:delete',
-      
-      // Attendance management
-      'attendance:create',
-      'attendance:read',
-      'attendance:update',
-      'attendance:delete',
-      
-      // Fee management
-      'fees:create',
-      'fees:read',
-      'fees:update',
-      'fees:delete',
-      
-      // Exam management
-      'exams:create',
-      'exams:read',
-      'exams:update',
-      'exams:delete',
-      
-      // Reports
-      'reports:read',
-      'reports:generate',
-      
-      // System admin
-      'system:admin',
-      'system:audit',
-    ],
-  }],
   isActive: {
     type: Boolean,
     default: true,
@@ -94,42 +33,52 @@ const roleSchema = new mongoose.Schema({
 // Index for efficient queries
 roleSchema.index({ name: 1 });
 roleSchema.index({ schoolId: 1 });
+roleSchema.index({ isActive: 1 });
 
-// Pre-save middleware
-roleSchema.pre('save', function(next) {
-  if (this.name === 'superadmin') {
-    // Superadmin has all permissions
-    this.permissions = [
-      'users:create', 'users:read', 'users:update', 'users:delete',
-      'roles:create', 'roles:read', 'roles:update', 'roles:delete',
-      'school:create', 'school:read', 'school:update', 'school:delete',
-      'classes:create', 'classes:read', 'classes:update', 'classes:delete',
-      'students:create', 'students:read', 'students:update', 'students:delete',
-      'teachers:create', 'teachers:read', 'teachers:update', 'teachers:delete',
-      'attendance:create', 'attendance:read', 'attendance:update', 'attendance:delete',
-      'fees:create', 'fees:read', 'fees:update', 'fees:delete',
-      'exams:create', 'exams:read', 'exams:update', 'exams:delete',
-      'reports:read', 'reports:generate',
-      'system:admin', 'system:audit',
-    ];
-  }
-  next();
+// Virtual for permissions
+roleSchema.virtual('permissions', {
+  ref: 'RolePermission',
+  localField: '_id',
+  foreignField: 'roleId'
 });
 
 // Static method to find role by name
 roleSchema.statics.findByName = function(name) {
-  return this.findOne({ name, isActive: true });
+  return this.findOne({ name: name.toUpperCase(), isActive: true });
 };
 
 // Static method to get role permissions
 roleSchema.statics.getRolePermissions = async function(roleName) {
-  const role = await this.findOne({ name: roleName, isActive: true });
-  return role ? role.permissions : [];
+  const role = await this.findOne({ name: name.toUpperCase(), isActive: true });
+  if (!role) return [];
+  
+  const RolePermission = mongoose.model('RolePermission');
+  const rolePermissions = await RolePermission.findActivePermissionsForRole(role._id);
+  return rolePermissions.map(rp => rp.permissionId);
 };
 
 // Instance method to check permission
-roleSchema.methods.hasPermission = function(permission) {
-  return this.permissions.includes(permission);
+roleSchema.methods.hasPermission = async function(permissionName) {
+  const RolePermission = mongoose.model('RolePermission');
+  const Permission = mongoose.model('Permission');
+  
+  const permission = await Permission.findByName(permissionName);
+  if (!permission) return false;
+  
+  const rolePermission = await RolePermission.findOne({
+    roleId: this._id,
+    permissionId: permission._id,
+    isActive: true
+  });
+  
+  return !!rolePermission;
+};
+
+// Instance method to get all permissions
+roleSchema.methods.getAllPermissions = async function() {
+  const RolePermission = mongoose.model('RolePermission');
+  const rolePermissions = await RolePermission.findActivePermissionsForRole(this._id);
+  return rolePermissions.map(rp => rp.permissionId);
 };
 
 module.exports = mongoose.model('Role', roleSchema);

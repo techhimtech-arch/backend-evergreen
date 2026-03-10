@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "test": "jest",
     "init-db": "node src/scripts/initDatabase.js",
-    "seed": "node src/scripts/seedData.js"
+    "seed": "node src/scripts/seedData.js",
+    "seed-rbac": "node src/scripts/seedRbac.js"
   },
   "keywords": [],
   "author": "",
