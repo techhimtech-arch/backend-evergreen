@@ -1,5 +1,7 @@
 const path = require('path');
 const dotenv = require('dotenv');
+const { validateEnv } = require('./validateEnv');
+const logger = require('./logger');
 
 /**
  * Load environment variables
@@ -8,68 +10,76 @@ dotenv.config({
   path: path.resolve(process.cwd(), '.env')
 });
 
-console.log("========== ENV DEBUG ==========");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("PORT:", process.env.PORT);
-console.log("MONGO_URI:", process.env.MONGO_URI ? "Loaded" : "Missing");
-console.log("JWT_SECRET:", process.env.JWT_SECRET ? "Loaded" : "Missing");
-console.log("JWT_REFRESH_SECRET:", process.env.JWT_REFRESH_SECRET ? "Loaded" : "Missing");
-console.log("================================");
-
 /**
- * Validate required ENV variables
+ * Validate and get configuration
  */
-const requiredEnvVars = [
-  'NODE_ENV',
-  'PORT',
-  'MONGO_URI',
-  'JWT_SECRET',
-  'JWT_REFRESH_SECRET'
-];
-
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
-  console.error("❌ Missing ENV Variables:", missingEnvVars);
-  process.exit(1);
-}
+const env = validateEnv();
 
 /**
  * Application Configuration
  */
 const config = {
-  env: process.env.NODE_ENV || 'development',
-
-  port: parseInt(process.env.PORT, 10) || 5000,
-
+  env: env.NODE_ENV,
+  port: env.PORT,
+  
   database: {
-    uri: process.env.MONGO_URI
+    uri: env.MONGO_URI,
+    name: env.MONGO_DB_NAME
   },
-
+  
   jwt: {
-    secret: process.env.JWT_SECRET,
-    refreshSecret: process.env.JWT_REFRESH_SECRET,
-    accessTokenExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
-    refreshTokenExpiry: process.env.JWT_REFRESH_EXPIRY || '7d'
+    secret: env.JWT_SECRET,
+    refreshSecret: env.JWT_REFRESH_SECRET,
+    accessTokenExpiry: env.JWT_ACCESS_EXPIRY,
+    refreshTokenExpiry: env.JWT_REFRESH_EXPIRY
   },
-
+  
   security: {
-    bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS, 10) || 12,
-    rateLimitWindowMs:
-      parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
-    rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100,
-    authRateLimitMax: parseInt(process.env.AUTH_RATE_LIMIT_MAX, 10) || 10
+    bcryptRounds: env.BCRYPT_ROUNDS,
+    rateLimitWindowMs: env.RATE_LIMIT_WINDOW_MS,
+    rateLimitMax: env.RATE_LIMIT_MAX,
+    authRateLimitMax: env.AUTH_RATE_LIMIT_MAX
   },
-
+  
   cors: {
-    origins: process.env.FRONTEND_URL
-      ? process.env.FRONTEND_URL.split(',').map(origin => origin.trim())
-      : []
+    origins: env.FRONTEND_URL ? [env.FRONTEND_URL] : []
   },
-
+  
   logging: {
-    level: process.env.LOG_LEVEL || 'info',
-    file: process.env.LOG_FILE || 'logs/app.log'
+    level: env.LOG_LEVEL,
+    file: env.LOG_FILE
+  },
+  
+  redis: {
+    url: env.REDIS_URL,
+    password: env.REDIS_PASSWORD
+  },
+  
+  email: {
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS
+  },
+  
+  upload: {
+    maxFileSize: env.MAX_FILE_SIZE,
+    allowedTypes: env.ALLOWED_FILE_TYPES
+  },
+  
+  api: {
+    version: env.API_VERSION,
+    prefix: env.API_PREFIX
+  },
+  
+  session: {
+    secret: env.SESSION_SECRET
+  },
+  
+  cloudinary: {
+    cloudName: env.CLOUDINARY_CLOUD_NAME,
+    apiKey: env.CLOUDINARY_API_KEY,
+    apiSecret: env.CLOUDINARY_API_SECRET
   }
 };
 
