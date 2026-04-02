@@ -7,11 +7,7 @@ router.use('/users', require('../../modules/users/users.routes'));
 router.use('/roles', require('../../modules/roles/roles.routes'));
 router.use('/permissions', require('../../modules/permissions/permissions.routes'));
 router.use('/groups', require('../../modules/groups/groups.routes'));
-router.use('/plantation-sites', require('../../modules/plantationSites/plantationSites.routes'));
-router.use('/plantation-entries', require('../../modules/plantationEntries/plantationEntries.routes'));
-router.use('/verifications', require('../../modules/verifications/verifications.routes'));
-router.use('/survival-reports', require('../../modules/survivalReports/survivalReports.routes'));
-router.use('/dashboard', require('../../modules/dashboard/dashboard.routes'));
+router.use('/assignments', require('../../modules/assignments/assignments.routes'));
 
 
 

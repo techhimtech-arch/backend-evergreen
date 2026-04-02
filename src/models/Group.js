@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const groupSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  type: { 
+  groupName: { type: String, required: true },
+  groupType: { 
     type: String, 
     enum: ['Mahila Mandal', 'Yuvak Mandal', 'Self Help Group', 'Other'], 
     required: true 
@@ -11,9 +11,8 @@ const groupSchema = new mongoose.Schema({
   panchayat: { type: String, required: true },
   district: { type: String, required: true },
   leaderName: { type: String, required: true },
-  mobileNumber: { type: String, required: true },
-  totalMembers: { type: Number, required: true, default: 0 },
-  leaderUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  mobile: { type: String, required: true },
+  membersCount: { type: Number, required: true, default: 0 },
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
 }, { timestamps: true });
 

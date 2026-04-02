@@ -7,12 +7,12 @@ exports.createGroup = expressAsyncHandler(async (req, res) => {
 });
 
 exports.getGroups = expressAsyncHandler(async (req, res) => {
-  const groups = await Group.find().populate('leaderUser', 'name email');
+  const groups = await Group.find();
   res.status(200).json({ success: true, count: groups.length, data: groups });
 });
 
 exports.getGroup = expressAsyncHandler(async (req, res) => {
-  const group = await Group.findById(req.params.id).populate('leaderUser', 'name email');
+  const group = await Group.findById(req.params.id);
   if (!group) return res.status(404).json({ success: false, message: 'Group not found' });
   res.status(200).json({ success: true, data: group });
 });
