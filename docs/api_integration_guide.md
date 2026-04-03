@@ -160,3 +160,51 @@ To get started as the Super Admin, use these credentials:
       "groupId": "<GROUP_ID>"
     }
     ```
+
+### Phase 6: Organization Management
+You will need Organizations to link Users (like `ORG_ADMIN`, `VOLUNTEER`) to a specific entity. Here are the endpoints the frontend will use to manage Organizations:
+
+**19. Fetch All Organizations**
+- **Method & Endpoint:** `GET /organizations`
+- **Query Params:** `?page=1&limit=10&status=ACTIVE&type=NGO`
+- **Payload:** *None*
+
+**20. Create a New Organization**
+- **Method & Endpoint:** `POST /organizations`
+- **Payload:**
+  ```json
+  {
+    "name": "Green Earth NGO",
+    "slug": "green-earth-ngo",
+    "organizationType": "NGO",
+    "description": "Plantation drive organization",
+    "contactEmail": "contact@greenearth.org",
+    "contactPhone": "+1234567890",
+    "address": "123 Green Avenue, NY",
+    "status": "ACTIVE"
+  }
+  ```
+  *(Note: `organizationType` must be one of `GOVERNMENT`, `NGO`, `SCHOOL`, or `CSR`)*
+
+**21. Get Specific Organization Details**
+- **Method & Endpoint:** `GET /organizations/:orgId`
+- **Payload:** *None*
+
+**22. Update Organization**
+- **Method & Endpoint:** `PUT /organizations/:orgId`
+  - **Payload:**
+    ```json
+    {
+      "name": "Green Earth Updated",
+      "contactEmail": "newemail@greenearth.org"
+    }
+    ```
+
+**23. Toggle Organization Status**
+- **Method & Endpoint:** `PATCH /organizations/:orgId/status`
+- **Payload:**
+  ```json
+  {
+    "status": "SUSPENDED"
+  }
+  ```

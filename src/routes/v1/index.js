@@ -4,6 +4,7 @@ const router = express.Router();
 // Import v1 routes
 router.use('/auth', require('../../modules/auth/auth.routes'));
 router.use('/users', require('../../modules/users/users.routes'));
+router.use('/organizations', require('../../modules/organizations/organizations.routes'));
 router.use('/roles', require('../../modules/roles/roles.routes'));
 router.use('/permissions', require('../../modules/permissions/permissions.routes'));
 router.use('/groups', require('../../modules/groups/groups.routes'));
