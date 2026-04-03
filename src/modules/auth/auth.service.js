@@ -98,7 +98,7 @@ class AuthService {
     await User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date(), lastLogin: new Date() } });
 
     // Determine role name (fallback to userType if roleId doesn't exist)
-    const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType ? user.userType.toLowerCase() : 'user');
+    const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType === 'SUPER_ADMIN' ? 'superadmin' : (user.userType ? user.userType.toLowerCase() : 'user'));
     const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
 
     // Generate tokens

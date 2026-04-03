@@ -111,7 +111,7 @@ const optionalAuth = async (req, res, next) => {
       
       const isActive = user && (user.status === 'ACTIVE' || user.isActive);
       if (user && isActive) {
-        const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType ? user.userType.toLowerCase() : 'user');
+        const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType === 'SUPER_ADMIN' ? 'superadmin' : (user.userType ? user.userType.toLowerCase() : 'user'));
         const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
         
         req.user = {
