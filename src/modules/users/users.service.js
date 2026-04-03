@@ -90,7 +90,7 @@ class UsersService {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate('schoolId', 'name');
+      .populate('organizationId', 'name');
 
     const total = await User.countDocuments(query);
 

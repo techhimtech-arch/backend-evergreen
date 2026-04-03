@@ -9,7 +9,7 @@ const refreshTokenSchema = new mongoose.Schema(
 
   token: { type: String, required: true },
   
-  schoolId: { type: mongoose.Schema.Types.ObjectId },
+  organizationId: { type: mongoose.Schema.Types.ObjectId },
   family: { type: String },
   isRevoked: { type: Boolean, default: false },
   revokedAt: { type: Date },

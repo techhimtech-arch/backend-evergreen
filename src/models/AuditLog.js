@@ -13,10 +13,10 @@ const auditLogSchema = new mongoose.Schema(
     userRole: {
       type: String,
     },
-    // School context
-    schoolId: {
+    // Organization context
+    organizationId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'School',
+      ref: 'Organization',
     },
     // Action details
     action: {
@@ -169,7 +169,7 @@ const auditLogSchema = new mongoose.Schema(
 );
 
 // Indexes for efficient querying
-auditLogSchema.index({ schoolId: 1, createdAt: -1 });
+auditLogSchema.index({ organizationId: 1, createdAt: -1 });
 auditLogSchema.index({ userId: 1, createdAt: -1 });
 auditLogSchema.index({ action: 1, createdAt: -1 });
 auditLogSchema.index({ resourceType: 1, resourceId: 1 });

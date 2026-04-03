@@ -8,17 +8,17 @@ class RolesController {
    * Get all roles
    */
   getRoles = asyncHandler(async (req, res) => {
-    const { schoolId, includeInactive = false } = req.query;
+    const { organizationId, includeInactive = false } = req.query;
 
     let query = {};
-    if (schoolId) {
-      query.schoolId = schoolId;
+    if (organizationId) {
+      query.organizationId = organizationId;
     }
     if (includeInactive !== 'true') {
       query.isActive = true;
     }
 
-    const roles = await Role.find(query).populate('schoolId', 'name');
+    const roles = await Role.find(query).populate('organizationId', 'name');
 
     return sendSuccess(res, 200, 'Roles retrieved successfully', roles);
   });
@@ -29,7 +29,7 @@ class RolesController {
   getRoleByName = asyncHandler(async (req, res) => {
     const { name } = req.params;
 
-    const role = await Role.findOne({ name }).populate('schoolId', 'name');
+    const role = await Role.findOne({ name }).populate('organizationId', 'name');
 
     if (!role) {
       return sendNotFound(res, 'Role not found');
@@ -42,19 +42,19 @@ class RolesController {
    * Create a new role
    */
   createRole = asyncHandler(async (req, res) => {
-    const { name, description, permissions, schoolId } = req.body;
+    const { name, description, permissions, organizationId } = req.body;
 
     // Check if role already exists
     const existingRole = await Role.findOne({ name });
     if (existingRole) {
-      return sendError(res, 409, 'Role with this name already exists');
+      return sendError(res, 400, 'Role with this name already exists');
     }
 
     const role = new Role({
       name,
       description,
       permissions,
-      schoolId,
+      organizationId,
     });
 
     await role.save();

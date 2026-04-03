@@ -34,7 +34,7 @@ const loginAuditSchema = new mongoose.Schema(
   },
   
   role: String,
-  schoolId: mongoose.Schema.Types.ObjectId,
+  organizationId: mongoose.Schema.Types.ObjectId,
   sessionId: mongoose.Schema.Types.ObjectId,
   tokenFamily: String
 },
@@ -53,7 +53,7 @@ loginAuditSchema.statics.logLoginAttempt = async function(data) {
       action: data.action,
       failureReason: data.failureReason,
       role: data.role,
-      schoolId: data.schoolId,
+      organizationId: data.organizationId,
       sessionId: data.sessionId,
       tokenFamily: data.tokenFamily
     });

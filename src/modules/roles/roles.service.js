@@ -6,17 +6,17 @@ class RolesService {
    * Get all roles
    */
   async getRoles(filters = {}) {
-    const { schoolId, includeInactive = false } = filters;
+    const { organizationId, includeInactive = false } = filters;
 
     let query = {};
-    if (schoolId) {
-      query.schoolId = schoolId;
+    if (organizationId) {
+      query.organizationId = organizationId;
     }
     if (!includeInactive) {
       query.isActive = true;
     }
 
-    const roles = await Role.find(query).populate('schoolId', 'name');
+    const roles = await Role.find(query).populate('organizationId', 'name');
 
     return roles;
   }
@@ -25,7 +25,7 @@ class RolesService {
    * Get role by name
    */
   async getRoleByName(name) {
-    const role = await Role.findOne({ name }).populate('schoolId', 'name');
+    const role = await Role.findOne({ name }).populate('organizationId', 'name');
 
     if (!role) {
       throw new Error('Role not found');
@@ -38,7 +38,7 @@ class RolesService {
    * Create a new role
    */
   async createRole(roleData, creatorId = null) {
-    const { name, description, permissions, schoolId } = roleData;
+    const { name, description, permissions, organizationId } = roleData;
 
     // Check if role already exists
     const existingRole = await Role.findOne({ name });
@@ -50,7 +50,7 @@ class RolesService {
       name,
       description,
       permissions,
-      schoolId,
+      organizationId,
     });
 
     await role.save();
