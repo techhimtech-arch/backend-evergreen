@@ -39,9 +39,15 @@ const createUserValidation = [
       return true;
     }),
   
-  body('userTypeId')
+  body('userType')
+    .optional()
+    .isIn(['SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER', 'CITIZEN'])
+    .withMessage('Valid user type is required'),
+    
+  body('organizationId')
+    .optional()
     .isMongoId()
-    .withMessage('Valid user type ID is required'),
+    .withMessage('Organization ID must be a valid MongoID'),
   
   body('phoneNumber')
     .optional()
@@ -99,15 +105,15 @@ const updateUserValidation = [
     .isURL()
     .withMessage('Profile image must be a valid URL'),
   
-  body('userTypeId')
+  body('userType')
     .optional()
-    .isMongoId()
-    .withMessage('Invalid user type ID'),
+    .isIn(['SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER', 'CITIZEN'])
+    .withMessage('Invalid user type'),
   
-  body('schoolId')
+  body('organizationId')
     .optional()
     .isMongoId()
-    .withMessage('Invalid school ID'),
+    .withMessage('Invalid organization ID'),
   
   body('status')
     .optional()
@@ -130,7 +136,7 @@ const getUsersValidation = [
   
   query('userType')
     .optional()
-    .isIn(['ADMIN', 'STAFF', 'CUSTOMER', 'PARTNER'])
+    .isIn(['SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER', 'CITIZEN'])
     .withMessage('Invalid user type filter'),
   
   query('status')
@@ -138,10 +144,10 @@ const getUsersValidation = [
     .isIn(['ACTIVE', 'SUSPENDED', 'DELETED'])
     .withMessage('Status filter must be one of: ACTIVE, SUSPENDED, DELETED'),
   
-  query('schoolId')
+  query('organizationId')
     .optional()
     .isMongoId()
-    .withMessage('Invalid school ID'),
+    .withMessage('Invalid organization ID'),
   
   query('search')
     .optional()

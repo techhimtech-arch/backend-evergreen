@@ -71,7 +71,9 @@ To get started as the Super Admin, use these credentials:
     "lastName": "Doe",
     "email": "john.doe@evergreen.com",
     "password": "Password123!",
-    "roleId": "<ROLE_OBJECT_ID>" 
+    "userType": "ORG_ADMIN",
+    "organizationId": "<ORG_OBJECT_ID>",
+    "status": "ACTIVE"
   }
   ```
 
@@ -87,7 +89,7 @@ To get started as the Super Admin, use these credentials:
       "firstName": "NewName",
       "lastName": "Doe",
       "email": "john@evergreen.com",
-      "isActive": true
+      "status": "ACTIVE"
     }
     ```
 
@@ -95,12 +97,12 @@ To get started as the Super Admin, use these credentials:
 - **Method & Endpoint:** `DELETE /users/:userId`
 - **Payload:** *None*
 
-**10. Toggle User Status (Active/Inactive)**
+**10. Toggle User Status**
 - **Method & Endpoint:** `PATCH /users/:userId/status`
 - **Payload:** 
   ```json
   {
-    "isActive": false
+    "status": "SUSPENDED"
   }
   ```
 

@@ -31,7 +31,10 @@ const authenticate = async (req, res, next) => {
     }
 
     // Determine role name avoiding null references
-    const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType ? user.userType.toLowerCase() : 'user');
+    let roleName = user.roleId && user.roleId.name ? user.roleId.name : '';
+    if (!roleName) {
+         roleName = user.userType === 'SUPER_ADMIN' ? 'superadmin' : (user.userType ? user.userType.toLowerCase().replace('_', '') : 'user');
+    }
     const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
 
     // Attach user to request object

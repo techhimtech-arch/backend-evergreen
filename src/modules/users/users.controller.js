@@ -20,9 +20,9 @@ class UsersController {
     const filters = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 10,
-      role: req.query.role,
-      isActive: req.query.isActive ? req.query.isActive === 'true' : undefined,
-      schoolId: req.query.schoolId || req.user?.schoolId,
+      userType: req.query.userType,
+      status: req.query.status,
+      organizationId: req.query.organizationId || req.user?.organizationId,
       search: req.query.search,
       sortBy: req.query.sortBy || 'createdAt',
       sortOrder: req.query.sortOrder || 'desc',

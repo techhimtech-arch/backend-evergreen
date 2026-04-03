@@ -7,7 +7,7 @@ class UsersService {
    * Create a new user
    */
   async createUser(userData, creatorId = null) {
-    const { name, email, password, role, schoolId, isActive = true } = userData;
+    const { firstName, lastName, email, password, userType, organizationId, status = 'ACTIVE' } = userData;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -20,12 +20,13 @@ class UsersService {
 
     // Create user
     const user = new User({
-      name,
+      firstName,
+      lastName,
       email,
-      password: hashedPassword,
-      role,
-      schoolId,
-      isActive,
+      passwordHash: hashedPassword,
+      userType: userType || 'CITIZEN',
+      organizationId,
+      status,
     });
 
     await user.save();
@@ -33,7 +34,7 @@ class UsersService {
     logger.info('User created successfully', {
       userId: user._id,
       email: user.email,
-      role: user.role,
+      userType: user.userType,
       creatorId,
     });
 
@@ -47,9 +48,9 @@ class UsersService {
     const {
       page = 1,
       limit = 10,
-      role,
-      isActive,
-      schoolId,
+      userType,
+      status,
+      organizationId,
       search,
       sortBy = 'createdAt',
       sortOrder = 'desc',
@@ -58,21 +59,22 @@ class UsersService {
     // Build query
     const query = {};
 
-    if (role) {
-      query.role = role;
+    if (userType) {
+      query.userType = userType;
     }
 
-    if (typeof isActive === 'boolean') {
-      query.isActive = isActive;
+    if (status) {
+      query.status = status;
     }
 
-    if (schoolId) {
-      query.schoolId = schoolId;
+    if (organizationId) {
+      query.organizationId = organizationId;
     }
 
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } },
       ];
     }
@@ -107,7 +109,7 @@ class UsersService {
    * Get user by ID
    */
   async getUserById(userId) {
-    const user = await User.findById(userId).select('-password').populate('schoolId', 'name');
+    const user = await User.findById(userId).select('-passwordHash').populate('organizationId', 'name');
 
     if (!user) {
       throw new Error('User not found');
@@ -120,7 +122,7 @@ class UsersService {
    * Update user
    */
   async updateUser(userId, updateData, updaterId = null) {
-    const { name, email, role, schoolId, isActive } = updateData;
+    const { firstName, lastName, email, userType, organizationId, status } = updateData;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -137,10 +139,11 @@ class UsersService {
     }
 
     // Update fields
-    if (name !== undefined) user.name = name;
-    if (role !== undefined) user.role = role;
-    if (schoolId !== undefined) user.schoolId = schoolId;
-    if (isActive !== undefined) user.isActive = isActive;
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (userType !== undefined) user.userType = userType;
+    if (organizationId !== undefined) user.organizationId = organizationId;
+    if (status !== undefined) user.status = status;
 
     await user.save();
 
@@ -162,8 +165,8 @@ class UsersService {
       throw new Error('User not found');
     }
 
-    // Soft delete by deactivating
-    user.isActive = false;
+    // Soft delete by updating status
+    user.status = 'DELETED';
     await user.save();
 
     logger.info('User deleted successfully', {
@@ -198,10 +201,10 @@ class UsersService {
   /**
    * Get user statistics
    */
-  async getUserStats(schoolId = null) {
+  async getUserStats(organizationId = null) {
     const matchStage = {};
-    if (schoolId) {
-      matchStage.schoolId = schoolId;
+    if (organizationId) {
+      matchStage.organizationId = organizationId;
     }
 
     const stats = await User.aggregate([
@@ -211,10 +214,10 @@ class UsersService {
           _id: null,
           totalUsers: { $sum: 1 },
           activeUsers: {
-            $sum: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$status', 'ACTIVE'] }, 1, 0] }
           },
           inactiveUsers: {
-            $sum: { $cond: [{ $eq: ['$isActive', false] }, 1, 0] }
+            $sum: { $cond: [{ $ne: ['$status', 'ACTIVE'] }, 1, 0] }
           },
         }
       },
@@ -232,10 +235,10 @@ class UsersService {
       { $match: matchStage },
       {
         $group: {
-          _id: '$role',
+          _id: '$userType',
           count: { $sum: 1 },
           active: {
-            $sum: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ['$status', 'ACTIVE'] }, 1, 0] }
           },
         }
       },
@@ -252,27 +255,28 @@ class UsersService {
    * Search users
    */
   async searchUsers(query, options = {}) {
-    const { limit = 20, schoolId, role } = options;
+    const { limit = 20, organizationId, userType } = options;
 
     const searchQuery = {
       $or: [
-        { name: { $regex: query, $options: 'i' } },
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } },
       ],
     };
 
-    if (schoolId) {
-      searchQuery.schoolId = schoolId;
+    if (organizationId) {
+      searchQuery.organizationId = organizationId;
     }
 
-    if (role) {
-      searchQuery.role = role;
+    if (userType) {
+      searchQuery.userType = userType;
     }
 
     const users = await User.find(searchQuery)
-      .select('-password')
+      .select('-passwordHash')
       .limit(limit)
-      .populate('schoolId', 'name');
+      .populate('organizationId', 'name');
 
     return users.map(user => this.formatUserResponse(user));
   }
@@ -305,14 +309,15 @@ class UsersService {
   formatUserResponse(user) {
     return {
       id: user._id,
-      name: user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
-      role: user.role,
-      schoolId: user.schoolId,
-      isActive: user.isActive,
+      userType: user.userType,
+      organizationId: user.organizationId,
+      status: user.status,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      school: user.schoolId || null,
+      organization: user.organizationId || null,
     };
   }
 }
