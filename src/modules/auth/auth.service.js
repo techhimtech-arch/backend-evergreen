@@ -79,8 +79,9 @@ class AuthService {
       throw new Error('Invalid credentials');
     }
 
-    // Check if user is active
-    if (!user.isActive) {
+    // Check if user is active (Map status to isActive for the logic)
+    const isActive = user.status === 'ACTIVE' || user.isActive;
+    if (!isActive) {
       await this.logFailedLogin(email, 'account_deactivated', requestInfo);
       throw new Error('Account is deactivated');
     }
@@ -93,16 +94,20 @@ class AuthService {
     }
 
     // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    user.lastLoginAt = new Date(); // Or user.lastLogin if keeping legacy
+    await User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date(), lastLogin: new Date() } });
+
+    // Determine role name (fallback to userType if roleId doesn't exist)
+    const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType ? user.userType.toLowerCase() : 'user');
+    const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
 
     // Generate tokens
     const tokenFamily = uuidv4();
     const payload = {
       userId: user._id,
       email: user.email,
-      role: user.roleId.name,
-      roleId: user.roleId._id,
+      role: roleName,
+      roleId: actualRoleId,
     };
 
     const accessToken = generateAccessToken(payload);
@@ -115,7 +120,7 @@ class AuthService {
     const refreshTokenDoc = new RefreshToken({
       token: refreshToken,
       userId: user._id,
-      schoolId: user.schoolId || null, // Allow null for superadmin
+      schoolId: user.schoolId || user.organizationId || null, // Allow null for superadmin
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       family: tokenFamily,
       userAgent: requestInfo.userAgent,
@@ -128,8 +133,8 @@ class AuthService {
     await LoginAudit.logLoginAttempt({
       userId: user._id,
       email: user.email,
-      role: user.roleId.name,
-      schoolId: user.schoolId,
+      role: roleName,
+      schoolId: user.schoolId || user.organizationId,
       action: 'login_success',
       ipAddress: requestInfo.ipAddress,
       userAgent: requestInfo.userAgent,
@@ -141,7 +146,7 @@ class AuthService {
     logger.info('User logged in successfully', {
       userId: user._id,
       email: user.email,
-      role: user.roleId.name,
+      role: roleName,
       ipAddress: requestInfo.ipAddress,
     });
 
@@ -153,10 +158,10 @@ class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: user.roleId.name,
-        roleId: user.roleId._id,
-        schoolId: user.schoolId,
-        lastLogin: user.lastLogin,
+        role: roleName,
+        roleId: actualRoleId,
+        schoolId: user.schoolId || user.organizationId,
+        lastLogin: user.lastLoginAt || user.lastLogin,
       },
     };
   }

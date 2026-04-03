@@ -5,9 +5,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'School Management System API',
+      title: 'Evergreen Plantation System API',
       version: '1.0.0',
-      description: 'Multi-school SaaS backend APIs',
+      description: 'Backend APIs for Evergreen Group & Assignment Management',
     },
     servers: [
       // { url: 'https://sms-backend-d19v.onrender.com/api/v1', description: 'Production' },

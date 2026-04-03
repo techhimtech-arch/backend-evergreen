@@ -62,7 +62,10 @@ const userSchema = new mongoose.Schema({
   organizationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Organization",
-    required: [true, 'Organization is required']
+    required: [function() {
+      // Organization is not required for SUPER_ADMIN
+      return this.userType !== 'SUPER_ADMIN';
+    }, 'Organization is required']
   },
   
   userType: {
@@ -247,6 +250,15 @@ userSchema.methods.getPermissions = async function() {
   });
   
   return Array.from(permissions);
+};
+
+// Static method to find by email with role. This maps to the existing findByEmailWithRoles
+// but handles the logic that auth.service.js expects.
+userSchema.statics.findByEmailWithRole = function(email) {
+  // `select('+passwordHash')` ensures that we can verify the password.
+  // Note: we might need to adjust auth.service.js or simulate what it expects
+  // auth.service expects: { isActive: true, roleId: { name: 'superadmin', ... }, comparePassword, email, etc. }
+  return this.findOne({ email }).select('+passwordHash');
 };
 
 // Static method to find by email with organization and roles
