@@ -180,7 +180,7 @@ class AuthService {
     }
 
     // Find user with role
-    const user = await User.findById(decoded.userId).populate('roleId');
+    const user = await User.findById(decoded.userId).populate({ path: 'roleId', strictPopulate: false });
     if (!user || !user.isActive) {
       // Revoke the token family for security
       await RefreshToken.revokeFamily(decoded.family, 'security');

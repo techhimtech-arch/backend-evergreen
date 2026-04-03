@@ -57,9 +57,10 @@ To get started as the Super Admin, use these credentials:
 - **Payload:** *None* (Only requires the Authorization header)
 
 ### Phase 3: User Management
-**5. Fetch All Users**
+**5. Fetch All Users (with pagination and filters)**
 - **Method & Endpoint:** `GET /users`
-- **Payload:** *None* (Supports query params like `?page=1&limit=10`)
+- **Query Params:** `?page=1&limit=10&role=teacher&isActive=true&search=John`
+- **Payload:** *None*
 
 **6. Create a New User**
 - **Method & Endpoint:** `POST /users`
@@ -74,18 +75,49 @@ To get started as the Super Admin, use these credentials:
   }
   ```
 
-**7. Get / Update / Delete User Details**
-- **Get User:** `GET /users/:id`
-- **Update User:** `PATCH /users/:id` 
-  - **Payload:** `{ "firstName": "NewName" }`
-- **Delete User:** `DELETE /users/:id`
+**7. Get Specific User Details**
+- **Method & Endpoint:** `GET /users/:userId`
+- **Payload:** *None*
+
+**8. Update User**
+- **Method & Endpoint:** `PUT /users/:userId` 
+  - **Payload:** 
+    ```json
+    {
+      "firstName": "NewName",
+      "lastName": "Doe",
+      "email": "john@evergreen.com",
+      "isActive": true
+    }
+    ```
+
+**9. Soft Delete User**
+- **Method & Endpoint:** `DELETE /users/:userId`
+- **Payload:** *None*
+
+**10. Toggle User Status (Active/Inactive)**
+- **Method & Endpoint:** `PATCH /users/:userId/status`
+- **Payload:** 
+  ```json
+  {
+    "isActive": false
+  }
+  ```
+
+**11. Search Users**
+- **Method & Endpoint:** `GET /users/search?q=john&limit=10`
+- **Payload:** *None*
+
+**12. User Statistics**
+- **Method & Endpoint:** `GET /users/stats`
+- **Payload:** *None*
 
 ### Phase 4: Roles & Permissions Hierarchy
-**8. Fetch All Roles**
+**13. Fetch All Roles**
 - **Method & Endpoint:** `GET /roles`
 - **Payload:** *None*
 
-**9. Create a Role**
+**14. Create a Role**
 - **Method & Endpoint:** `POST /roles`
 - **Payload:**
   ```json
@@ -96,16 +128,16 @@ To get started as the Super Admin, use these credentials:
   }
   ```
 
-**10. Fetch Permissions List**
+**15. Fetch Permissions List**
 - **Method & Endpoint:** `GET /permissions`
 - **Payload:** *None*
 
 ### Phase 5: Groups & Assignments
-**11. Fetch All Groups**
+**16. Fetch All Groups**
 - **Method & Endpoint:** `GET /groups`
 - **Payload:** *None*
 
-**12. Create a Group**
+**17. Create a Group**
 - **Method & Endpoint:** `POST /groups`
 - **Payload:**
   ```json
@@ -115,7 +147,7 @@ To get started as the Super Admin, use these credentials:
   }
   ```
 
-**13. Manage Assignments**
+**18. Manage Assignments**
 - **Fetch Assignments:** `GET /assignments`
 - **Create Assignment:** `POST /assignments`
   - **Payload:**

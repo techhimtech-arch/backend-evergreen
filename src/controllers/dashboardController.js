@@ -1,154 +1,61 @@
 const mongoose = require('mongoose');
-const Student = require('../models/Student');
 const User = require('../models/User');
-const Class = require('../models/Class');
-const Section = require('../models/Section');
-const Attendance = require('../models/Attendance');
-const FeePayment = require('../models/FeePayment');
-const StudentFee = require('../models/StudentFee');
-const Exam = require('../models/Exam');
-const Result = require('../models/Result');
+const Group = require('../models/Group');
+const Assignment = require('../models/Assignment');
+const Organization = require('../models/Organization');
 const logger = require('../utils/logger');
 
 /**
- * @desc    Get dashboard statistics for school admin
- * @route   GET /api/dashboard
- * @access  Private (school_admin)
- * 
- * RECOMMENDED INDEXES:
- * - Student: { schoolId: 1, isActive: 1 }
- * - User: { schoolId: 1, role: 1, isActive: 1 }
- * - Class: { schoolId: 1, isActive: 1 }
- * - Section: { schoolId: 1, isActive: 1 }
- * - Attendance: { schoolId: 1, date: 1, status: 1 }
- * - FeePayment: { schoolId: 1 }
- * - StudentFee: { schoolId: 1 }
- * - Exam: { schoolId: 1, isActive: 1 }
- * - Result: { schoolId: 1 }
+ * @desc    Get dashboard statistics for Evergreen system
+ * @route   GET /api/v1/dashboard
+ * @access  Private (Admin)
  */
 const getDashboardStats = async (req, res) => {
   try {
-    const schoolId = new mongoose.Types.ObjectId(req.user.schoolId);
+    // Determine the query conditionally if user is tied to an organization
+    const orgQuery = req.user.role === 'superadmin' || req.user.userType === 'SUPER_ADMIN' 
+      ? {} 
+      : { organizationId: new mongoose.Types.ObjectId(req.user.organizationId || req.user.schoolId) };
 
-    // Get today's date range (start and end of day)
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-
-    // Run all queries in parallel for better performance
+    // Run parallel counts for performance
     const [
-      totalStudents,
-      totalTeachers,
-      totalClasses,
-      totalSections,
-      attendanceStats,
-      feesCollected,
-      pendingFees,
-      totalExams,
-      totalResultsEntered,
+      totalUsers,
+      totalGroups,
+      totalAssignments,
+      totalOrganizations,
+      assignmentStats
     ] = await Promise.all([
-      // Basic Stats - using countDocuments for simple counts
-      Student.countDocuments({ schoolId, isActive: true }),
+      User.countDocuments(orgQuery),
+      Group.countDocuments({ status: 'Active' }), // If custom filtering needed later
+      Assignment.countDocuments({}),
+      Organization.countDocuments({ status: 'ACTIVE' }),
       
-      User.countDocuments({ schoolId, role: 'teacher', isActive: true }),
-      
-      Class.countDocuments({ schoolId, isActive: true }),
-      
-      Section.countDocuments({ schoolId, isActive: true }),
-
-      // Attendance Stats - using aggregation pipeline
-      Attendance.aggregate([
-        {
-          $match: {
-            schoolId,
-            date: { $gte: startOfDay, $lte: endOfDay },
-          },
-        },
+      // Calculate some summary metrics out of Assignments (like total land area or target plants)
+      Assignment.aggregate([
         {
           $group: {
             _id: null,
-            totalMarked: { $sum: 1 },
-            presentCount: {
-              $sum: { $cond: [{ $eq: ['$status', 'Present'] }, 1, 0] },
-            },
-            absentCount: {
-              $sum: { $cond: [{ $eq: ['$status', 'Absent'] }, 1, 0] },
-            },
+            totalLandArea: { $sum: '$landArea' },
+            totalTargetPlants: { $sum: '$targetPlants' },
           },
         },
       ]),
-
-      // Fees Stats - total collected using aggregation
-      FeePayment.aggregate([
-        {
-          $match: { schoolId },
-        },
-        {
-          $group: {
-            _id: null,
-            totalAmount: { $sum: '$amount' },
-          },
-        },
-      ]),
-
-      // Pending Fees - sum of balanceAmount from StudentFee
-      StudentFee.aggregate([
-        {
-          $match: { schoolId },
-        },
-        {
-          $group: {
-            _id: null,
-            totalPending: { $sum: '$balanceAmount' },
-          },
-        },
-      ]),
-
-      // Exam Stats
-      Exam.countDocuments({ schoolId, isActive: true }),
-      
-      Result.countDocuments({ schoolId }),
     ]);
 
-    // Process attendance stats
-    const attendanceData = attendanceStats[0] || {
-      totalMarked: 0,
-      presentCount: 0,
-      absentCount: 0,
-    };
+    const aggregateAssignmentStats = assignmentStats[0] || { totalLandArea: 0, totalTargetPlants: 0 };
 
-    // Calculate attendance percentage
-    const attendancePercentage =
-      attendanceData.totalMarked > 0
-        ? parseFloat(((attendanceData.presentCount / attendanceData.totalMarked) * 100).toFixed(2))
-        : 0;
-
-    // Process fees stats
-    const totalFeesCollected = feesCollected[0]?.totalAmount || 0;
-    const totalPendingFees = pendingFees[0]?.totalPending || 0;
-
-    // Build response
+    // Build analytical response payload
     const dashboardData = {
       stats: {
-        totalStudents,
-        totalTeachers,
-        totalClasses,
-        totalSections,
+        totalUsers,
+        totalGroups,
+        totalAssignments,
+        totalOrganizations
       },
-      attendance: {
-        totalMarked: attendanceData.totalMarked,
-        presentCount: attendanceData.presentCount,
-        absentCount: attendanceData.absentCount,
-        attendancePercentage,
-      },
-      fees: {
-        totalFeesCollected,
-        totalPendingFees,
-      },
-      exams: {
-        totalExams,
-        totalResultsEntered,
-      },
+      plantations: {
+        totalLandAreaAllocated: aggregateAssignmentStats.totalLandArea,
+        totalTargetPlants: aggregateAssignmentStats.totalTargetPlants
+      }
     };
 
     res.status(200).json({

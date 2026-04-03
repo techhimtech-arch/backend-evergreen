@@ -8,8 +8,7 @@ router.use('/roles', require('../../modules/roles/roles.routes'));
 router.use('/permissions', require('../../modules/permissions/permissions.routes'));
 router.use('/groups', require('../../modules/groups/groups.routes'));
 router.use('/assignments', require('../../modules/assignments/assignments.routes'));
-
-
+router.use('/dashboard', require('./dashboard.routes'));
 
 // Health check endpoint
 router.get('/health', (req, res) => {

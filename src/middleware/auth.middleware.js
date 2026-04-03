@@ -16,30 +16,39 @@ const authenticate = async (req, res, next) => {
 
     const decoded = verifyAccessToken(token);
     
-    // Find user with role and verify they exist and are active
-    const user = await User.findById(decoded.userId).populate('roleId').select('-passwordHash');
+    // Find user by ID and conditionally populate avoiding Mongoose crash
+    // if roleId was missing from newer schema definitions
+    // using strictPopulate: false as requested
+    const user = await User.findById(decoded.userId).populate({ path: 'roleId', strictPopulate: false }).select('-passwordHash');
     
     if (!user) {
       return sendUnauthorized(res, 'User not found');
     }
 
-    if (!user.isActive) {
+    const isActive = user.status === 'ACTIVE' || user.isActive;
+    if (!isActive) {
       return sendUnauthorized(res, 'User account is deactivated');
     }
+
+    // Determine role name avoiding null references
+    const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType ? user.userType.toLowerCase() : 'user');
+    const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
 
     // Attach user to request object
     req.user = {
       userId: user._id,
       email: user.email,
-      role: user.roleId.name,
-      roleId: user.roleId._id,
-      schoolId: user.schoolId,
+      role: roleName,
+      roleId: actualRoleId,
+      organizationId: user.organizationId,
+      userType: user.userType,
+      schoolId: user.schoolId || user.organizationId,
     };
 
     logger.info('User authenticated successfully', {
       userId: user._id,
       email: user.email,
-      role: user.roleId.name,
+      role: roleName,
     });
 
     next();
@@ -98,15 +107,21 @@ const optionalAuth = async (req, res, next) => {
     
     if (token) {
       const decoded = verifyAccessToken(token);
-      const user = await User.findById(decoded.userId).populate('roleId').select('-passwordHash');
+      const user = await User.findById(decoded.userId).populate({ path: 'roleId', strictPopulate: false }).select('-passwordHash');
       
-      if (user && user.isActive) {
+      const isActive = user && (user.status === 'ACTIVE' || user.isActive);
+      if (user && isActive) {
+        const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType ? user.userType.toLowerCase() : 'user');
+        const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
+        
         req.user = {
           userId: user._id,
           email: user.email,
-          role: user.roleId.name,
-          roleId: user.roleId._id,
-          schoolId: user.schoolId,
+          role: roleName,
+          roleId: actualRoleId,
+          organizationId: user.organizationId,
+          userType: user.userType,
+          schoolId: user.schoolId || user.organizationId,
         };
       }
     }
