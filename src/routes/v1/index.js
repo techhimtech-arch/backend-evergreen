@@ -10,6 +10,8 @@ router.use('/permissions', require('../../modules/permissions/permissions.routes
 router.use('/groups', require('../../modules/groups/groups.routes'));
 router.use('/assignments', require('../../modules/assignments/assignments.routes'));
 router.use('/dashboard', require('./dashboard.routes'));
+router.use('/plants', require('../../modules/plants/plants.routes'));
+router.use('/trees', require('../../modules/trees/trees.routes'));
 
 // Health check endpoint
 router.get('/health', (req, res) => {
