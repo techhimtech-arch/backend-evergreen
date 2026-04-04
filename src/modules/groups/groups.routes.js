@@ -1,7 +1,15 @@
 const express = require('express');
 const { createGroup, getGroups, getGroup, updateGroup, deleteGroup } = require('./groups.controller');
+const { authenticate } = require('../../middleware/auth.middleware');
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: Groups
+ *   description: Community group management APIs
+ */
 
 /**
  * @swagger
@@ -22,7 +30,7 @@ const router = express.Router();
  *           type: string
  *         groupType:
  *           type: string
- *           enum: [Mahila Mandal, Yuvak Mandal, Self Help Group, Other]
+ *           enum: [Mahila Mandal, Yuvak Mandal, Self Help Group, Other]        
  *         village:
  *           type: string
  *         panchayat:
@@ -38,8 +46,14 @@ const router = express.Router();
  *         status:
  *           type: string
  *           enum: [Active, Inactive]
- * 
- * /groups:
+ *           default: Active
+ *         organizationId:
+ *           type: string
+ *         isGlobal:
+ *           type: boolean
+ *           default: false
+ *
+ * /api/v1/groups:
  *   post:
  *     summary: Register a new community group
  *     tags: [Groups]
@@ -64,12 +78,12 @@ const router = express.Router();
  *         description: List of groups
  */
 router.route('/')
-  .post(createGroup)
-  .get(getGroups);
+  .post(authenticate, createGroup)
+  .get(authenticate, getGroups);
 
 /**
  * @swagger
- * /groups/{id}:
+ * /api/v1/groups/{id}:
  *   get:
  *     summary: Get group details
  *     tags: [Groups]
@@ -81,6 +95,9 @@ router.route('/')
  *         required: true
  *         schema:
  *           type: string
+ *     responses:
+ *       200:
+ *         description: Group details returned successfully
  *   put:
  *     summary: Update group
  *     tags: [Groups]
@@ -98,6 +115,9 @@ router.route('/')
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/Group'
+ *     responses:
+ *       200:
+ *         description: Group updated successfully
  *   delete:
  *     summary: Delete group
  *     tags: [Groups]
@@ -109,10 +129,13 @@ router.route('/')
  *         required: true
  *         schema:
  *           type: string
+ *     responses:
+ *       200:
+ *         description: Group deleted successfully
  */
 router.route('/:id')
-  .get(getGroup)
-  .put(updateGroup)
-  .delete(deleteGroup);
+  .get(authenticate, getGroup)
+  .put(authenticate, updateGroup)
+  .delete(authenticate, deleteGroup);
 
 module.exports = router;

@@ -14,6 +14,5 @@ const groupSchema = new mongoose.Schema({
   mobile: { type: String, required: true },
   membersCount: { type: Number, required: true, default: 0 },
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
-}, { timestamps: true });
-
-module.exports = mongoose.model('Group', groupSchema);
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
+  isGlobal: { type: Boolean, default: false }

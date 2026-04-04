@@ -6,7 +6,8 @@ const assignmentSchema = new mongoose.Schema({
   targetPlants: { type: Number, required: true },
   species: [{ type: String }],
   assignedDate: { type: Date, default: Date.now },
-  assignedOfficer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+  assignedOfficer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Assignment', assignmentSchema);

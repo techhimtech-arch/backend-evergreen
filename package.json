@@ -1,7 +1,7 @@
 {
-  "name": "school-management-system",
+  "name": "hpecergreen",
   "version": "1.0.0",
-  "description": "Backend foundation for a School Management System",
+  "description": "hp evergreen backend",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
