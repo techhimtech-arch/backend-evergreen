@@ -1,5 +1,5 @@
 const Plant = require('../../models/Plant');
-const { apiResponse } = require('../../utils/response');
+const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
 
 // @desc    Get all plants
 // @route   GET /api/v1/plants
@@ -7,9 +7,9 @@ const { apiResponse } = require('../../utils/response');
 exports.getPlants = async (req, res) => {
   try {
     const plants = await Plant.find();
-    return apiResponse(res, 200, true, 'Plants retrieved successfully', plants);
+    return sendSuccess(res, 200, 'Plants retrieved successfully', plants);
   } catch (error) {
-    return apiResponse(res, 500, false, error.message);
+    return sendError(res, 500, error.message);
   }
 };
 
@@ -20,11 +20,11 @@ exports.getPlant = async (req, res) => {
   try {
     const plant = await Plant.findById(req.params.id);
     if (!plant) {
-      return apiResponse(res, 404, false, 'Plant not found');
+      return sendNotFound(res, 'Plant not found');
     }
-    return apiResponse(res, 200, true, 'Plant found', plant);
+    return sendSuccess(res, 200, 'Plant found', plant);
   } catch (error) {
-    return apiResponse(res, 500, false, error.message);
+    return sendError(res, 500, error.message);
   }
 };
 
@@ -34,9 +34,9 @@ exports.getPlant = async (req, res) => {
 exports.createPlant = async (req, res) => {
   try {
     const plant = await Plant.create(req.body);
-    return apiResponse(res, 201, true, 'Plant created successfully', plant);
+    return sendSuccess(res, 201, 'Plant created successfully', plant);
   } catch (error) {
-    return apiResponse(res, 400, false, error.message);
+    return sendError(res, 400, error.message);
   }
 };
 
@@ -50,11 +50,11 @@ exports.updatePlant = async (req, res) => {
       runValidators: true
     });
     if (!plant) {
-      return apiResponse(res, 404, false, 'Plant not found');
+      return sendNotFound(res, 'Plant not found');
     }
-    return apiResponse(res, 200, true, 'Plant updated successfully', plant);
+    return sendSuccess(res, 200, 'Plant updated successfully', plant);
   } catch (error) {
-    return apiResponse(res, 400, false, error.message);
+    return sendError(res, 400, error.message);
   }
 };
 
@@ -65,10 +65,10 @@ exports.deletePlant = async (req, res) => {
   try {
     const plant = await Plant.findByIdAndDelete(req.params.id);
     if (!plant) {
-      return apiResponse(res, 404, false, 'Plant not found');
+      return sendNotFound(res, 'Plant not found');
     }
-    return apiResponse(res, 200, true, 'Plant deleted successfully');
+    return sendSuccess(res, 200, 'Plant deleted successfully');
   } catch (error) {
-    return apiResponse(res, 500, false, error.message);
+    return sendError(res, 500, error.message);
   }
 };

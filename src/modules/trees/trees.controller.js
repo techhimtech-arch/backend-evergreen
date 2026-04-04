@@ -1,5 +1,5 @@
 const Tree = require('../../models/Tree');
-const { apiResponse } = require('../../utils/response');
+const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
 
 // @desc    Get all trees (with pagination/filters)
 // @route   GET /api/v1/trees
@@ -9,9 +9,9 @@ exports.getTrees = async (req, res) => {
     const trees = await Tree.find()
       .populate('plantTypeId', 'name scientificName category')
       .populate('plantedBy', 'name email');
-    return apiResponse(res, 200, true, 'Trees retrieved', trees);
+    return sendSuccess(res, 200, 'Trees retrieved', trees);
   } catch (error) {
-    return apiResponse(res, 500, false, error.message);
+    return sendError(res, 500, error.message);
   }
 };
 
@@ -29,9 +29,9 @@ exports.registerTree = async (req, res) => {
     
     const tree = await Tree.create(treeData);
     
-    return apiResponse(res, 201, true, 'Tree registered successfully', tree);
+    return sendSuccess(res, 201, 'Tree registered successfully', tree);
   } catch (error) {
-    return apiResponse(res, 400, false, error.message);
+    return sendError(res, 400, error.message);
   }
 };
 
@@ -45,11 +45,11 @@ exports.getTree = async (req, res) => {
        .populate('plantedBy', 'name email');
        
     if (!tree) {
-      return apiResponse(res, 404, false, 'Tree not found');
+      return sendNotFound(res, 'Tree not found');
     }
-    return apiResponse(res, 200, true, 'Tree found', tree);
+    return sendSuccess(res, 200, 'Tree found', tree);
   } catch (error) {
-    return apiResponse(res, 500, false, error.message);
+    return sendError(res, 500, error.message);
   }
 };
 
@@ -64,11 +64,11 @@ exports.updateTree = async (req, res) => {
     });
     
     if (!tree) {
-      return apiResponse(res, 404, false, 'Tree not found');
+      return sendNotFound(res, 'Tree not found');
     }
-    return apiResponse(res, 200, true, 'Tree updated successfully', tree);
+    return sendSuccess(res, 200, 'Tree updated successfully', tree);
   } catch (error) {
-    return apiResponse(res, 400, false, error.message);
+    return sendError(res, 400, error.message);
   }
 };
 
@@ -79,10 +79,10 @@ exports.deleteTree = async (req, res) => {
   try {
     const tree = await Tree.findByIdAndDelete(req.params.id);
     if (!tree) {
-      return apiResponse(res, 404, false, 'Tree not found');
+      return sendNotFound(res, 'Tree not found');
     }
-    return apiResponse(res, 200, true, 'Tree deleted');
+    return sendSuccess(res, 200, 'Tree deleted');
   } catch (error) {
-    return apiResponse(res, 500, false, error.message);
+    return sendError(res, 500, error.message);
   }
 };
