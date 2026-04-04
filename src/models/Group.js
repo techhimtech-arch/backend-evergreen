@@ -16,3 +16,6 @@ const groupSchema = new mongoose.Schema({
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization' },
   isGlobal: { type: Boolean, default: false }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Group', groupSchema);

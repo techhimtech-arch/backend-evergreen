@@ -1,7 +1,21 @@
 const express = require('express');
-const { createAssignment, getAssignments, getAssignment } = require('./assignments.controller');
+const {
+  createAssignment,
+  getAssignments,
+  getAssignment,
+  updateAssignment,
+  deleteAssignment
+} = require('./assignments.controller');
+const { authenticate } = require('../../middleware/auth.middleware');
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: Assignments
+ *   description: Target assignment management APIs
+ */
 
 /**
  * @swagger
@@ -27,10 +41,12 @@ const router = express.Router();
  *             type: string
  *         assignedOfficer:
  *           type: string
- * 
- * /assignments:
+ *         organizationId:
+ *           type: string
+ *
+ * /api/v1/assignments:
  *   post:
- *     summary: Assign a new plantation site to a group
+ *     summary: Create a new target assignment
  *     tags: [Assignments]
  *     security:
  *       - bearerAuth: []
@@ -53,14 +69,14 @@ const router = express.Router();
  *         description: List of assignments
  */
 router.route('/')
-  .post(createAssignment)
-  .get(getAssignments);
+  .post(authenticate, createAssignment)
+  .get(authenticate, getAssignments);
 
 /**
  * @swagger
- * /assignments/{id}:
+ * /api/v1/assignments/{id}:
  *   get:
- *     summary: Get a specific assignment by ID
+ *     summary: Get assignment details
  *     tags: [Assignments]
  *     security:
  *       - bearerAuth: []
@@ -72,9 +88,45 @@ router.route('/')
  *           type: string
  *     responses:
  *       200:
- *         description: Assignment details
+ *         description: Assignment details returned successfully
+ *   put:
+ *     summary: Update assignment
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Assignment'
+ *     responses:
+ *       200:
+ *         description: Assignment updated successfully
+ *   delete:
+ *     summary: Delete assignment
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Assignment deleted successfully
  */
 router.route('/:id')
-  .get(getAssignment);
+  .get(authenticate, getAssignment)
+  .put(authenticate, updateAssignment)
+  .delete(authenticate, deleteAssignment);
 
 module.exports = router;
