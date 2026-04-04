@@ -98,7 +98,7 @@ class AuthService {
     await User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date(), lastLogin: new Date() } });
 
     // Determine role name (fallback to userType if roleId doesn't exist)
-    const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType === 'SUPER_ADMIN' ? 'superadmin' : (user.userType ? user.userType.toLowerCase() : 'user'));
+    const roleName = user.roleId && user.roleId.name ? user.roleId.name : (user.userType === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : (user.userType ? user.userType.toLowerCase() : 'user'));
     const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
 
     // Generate tokens
@@ -191,7 +191,7 @@ class AuthService {
     const newPayload = {
       userId: user._id,
       email: user.email,
-      role: user.roleId?.name || (user.userType === 'SUPER_ADMIN' ? 'superadmin' : 'user'),
+      role: user.roleId?.name || (user.userType === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'user'),
       roleId: user.roleId?._id || user.roleId,
       organizationId: user.organizationId,
       userType: user.userType,
@@ -223,7 +223,7 @@ class AuthService {
     await LoginAudit.logLoginAttempt({
       userId: user._id,
       email: user.email,
-      role: user.roleId?.name || (user.userType === 'SUPER_ADMIN' ? 'superadmin' : 'user'),
+      role: user.roleId?.name || (user.userType === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'user'),
       schoolId: user.schoolId,
       action: 'token_refresh',
       ipAddress: requestInfo.ipAddress,
