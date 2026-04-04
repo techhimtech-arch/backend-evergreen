@@ -3,6 +3,8 @@ const User = require('../models/User');
 const Group = require('../models/Group');
 const Assignment = require('../models/Assignment');
 const Organization = require('../models/Organization');
+const Tree = require('../models/Tree');
+const Inspection = require('../models/Inspection');
 const logger = require('../utils/logger');
 
 /**
@@ -23,14 +25,16 @@ const getDashboardStats = async (req, res) => {
       totalGroups,
       totalAssignments,
       totalOrganizations,
-      assignmentStats
+      assignmentStats,
+      treeStats,
+      inspectionStats
     ] = await Promise.all([
       User.countDocuments(orgQuery),
-      Group.countDocuments({ status: 'Active' }), // If custom filtering needed later
+      Group.countDocuments({ status: 'Active' }),
       Assignment.countDocuments({}),
       Organization.countDocuments({ status: 'ACTIVE' }),
-      
-      // Calculate some summary metrics out of Assignments (like total land area or target plants)
+
+      // Assignment summary metrics
       Assignment.aggregate([
         {
           $group: {
@@ -40,9 +44,52 @@ const getDashboardStats = async (req, res) => {
           },
         },
       ]),
+
+      // Tree statistics for Phase 2
+      Tree.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalTrees: { $sum: 1 },
+            healthyTrees: {
+              $sum: { $cond: [{ $eq: ['$status', 'HEALTHY'] }, 1, 0] }
+            },
+            weakTrees: {
+              $sum: { $cond: [{ $eq: ['$status', 'WEAK'] }, 1, 0] }
+            },
+            deadTrees: {
+              $sum: { $cond: [{ $eq: ['$status', 'DEAD'] }, 1, 0] }
+            },
+            totalPhotos: { $sum: { $size: '$photos' } }
+          }
+        }
+      ]),
+
+      // Inspection statistics for Phase 2
+      Inspection.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalInspections: { $sum: 1 },
+            completedInspections: {
+              $sum: { $cond: [{ $eq: ['$status', 'COMPLETED'] }, 1, 0] }
+            },
+            pendingInspections: {
+              $sum: { $cond: [{ $in: ['$status', ['PENDING', 'IN_PROGRESS']] }, 1, 0] }
+            }
+          }
+        }
+      ])
     ]);
 
     const aggregateAssignmentStats = assignmentStats[0] || { totalLandArea: 0, totalTargetPlants: 0 };
+    const aggregateTreeStats = treeStats[0] || { totalTrees: 0, healthyTrees: 0, weakTrees: 0, deadTrees: 0, totalPhotos: 0 };
+    const aggregateInspectionStats = inspectionStats[0] || { totalInspections: 0, completedInspections: 0, pendingInspections: 0 };
+
+    // Calculate survival rate
+    const survivalRate = aggregateTreeStats.totalTrees > 0
+      ? ((aggregateTreeStats.totalTrees - aggregateTreeStats.deadTrees) / aggregateTreeStats.totalTrees * 100).toFixed(1)
+      : 0;
 
     // Build analytical response payload
     const dashboardData = {
@@ -55,6 +102,23 @@ const getDashboardStats = async (req, res) => {
       plantations: {
         totalLandAreaAllocated: aggregateAssignmentStats.totalLandArea,
         totalTargetPlants: aggregateAssignmentStats.totalTargetPlants
+      },
+      // Phase 2: Tree Monitoring Statistics
+      trees: {
+        totalTrees: aggregateTreeStats.totalTrees,
+        healthyTrees: aggregateTreeStats.healthyTrees,
+        weakTrees: aggregateTreeStats.weakTrees,
+        deadTrees: aggregateTreeStats.deadTrees,
+        survivalRate: parseFloat(survivalRate),
+        totalPhotos: aggregateTreeStats.totalPhotos
+      },
+      inspections: {
+        totalInspections: aggregateInspectionStats.totalInspections,
+        completedInspections: aggregateInspectionStats.completedInspections,
+        pendingInspections: aggregateInspectionStats.pendingInspections,
+        completionRate: aggregateInspectionStats.totalInspections > 0
+          ? ((aggregateInspectionStats.completedInspections / aggregateInspectionStats.totalInspections) * 100).toFixed(1)
+          : 0
       }
     };
 

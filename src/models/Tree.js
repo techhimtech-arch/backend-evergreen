@@ -18,16 +18,49 @@ const treeSchema = new mongoose.Schema(
   },
 
   location: String,
-  latitude: Number,
-  longitude: Number,
+  latitude: {
+    type: Number,
+    min: -90,
+    max: 90
+  },
+  longitude: {
+    type: Number,
+    min: -180,
+    max: 180
+  },
 
-  photo: String,
-
+  // Enhanced health tracking for Phase 2
   status: {
     type: String,
-    enum: ["PLANTED", "GROWING", "DEAD"],
+    enum: ["PLANTED", "GROWING", "HEALTHY", "WEAK", "DEAD"],
     default: "PLANTED"
   },
+
+  growthStage: {
+    type: String,
+    enum: ["SEEDLING", "SAPLING", "YOUNG", "MATURE", "FLOWERING", "FRUITING"],
+    default: "SEEDLING"
+  },
+
+  healthRemarks: String,
+
+  // Photo management
+  photos: [{
+    url: String,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    },
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    caption: String
+  }],
+
+  // Inspection tracking
+  lastInspectionDate: Date,
+  nextInspectionDate: Date,
 
   plantedAt: Date
 },
@@ -36,5 +69,7 @@ const treeSchema = new mongoose.Schema(
 
 // Index for efficient queries
 treeSchema.index({ eventId: 1 });
+treeSchema.index({ status: 1 });
+treeSchema.index({ latitude: 1, longitude: 1 }); // Geo index
 
 module.exports = mongoose.model("Tree", treeSchema);

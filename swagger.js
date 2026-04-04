@@ -6,8 +6,8 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'HP Evergreen - Tree Plantation Ecosystem API',
-      version: '1.0.0',
-      description: 'Backend APIs for the HP Evergreen System. Includes modules for Authentication, Organizations, Groups, Plant Catalog, and Tree Registration with Geo-Tagging.',
+      version: '2.0.0',
+      description: 'Backend APIs for the HP Evergreen System. Phase 1: Authentication, Organizations, Groups, Plant Catalog, Tree Registration. Phase 2: Tree Health Monitoring, Photo Management, Geo-Tagging, Inspection Module.',
     },
     servers: [
       // { url: 'https://sms-backend-d19v.onrender.com/api/v1', description: 'Production' },

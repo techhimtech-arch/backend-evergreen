@@ -13,6 +13,7 @@ router.use('/dashboard', require('./dashboard.routes'));
 router.use('/plants', require('../../modules/plants/plants.routes'));
 router.use('/trees', require('../../modules/trees/trees.routes'));
 router.use('/events', require('../../modules/plantationEvents/plantationEvents.routes'));
+router.use('/inspections', require('../../modules/inspections/inspections.routes'));
 
 // Health check endpoint
 router.get('/health', (req, res) => {
