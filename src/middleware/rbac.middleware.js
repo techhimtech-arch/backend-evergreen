@@ -21,7 +21,7 @@ const authenticateToken = async (req, res, next) => {
     
     // Find user with user type and roles
     const user = await User.findById(decoded.userId)
-      .populate('userTypeId')
+      .populate({ path: 'userTypeId', strictPopulate: false })
       .select('-passwordHash');
     
     if (!user) {
@@ -212,7 +212,7 @@ const optionalAuth = async (req, res, next) => {
     if (token) {
       const decoded = verifyAccessToken(token);
       const user = await User.findById(decoded.userId)
-        .populate('userTypeId')
+        .populate({ path: 'userTypeId', strictPopulate: false })
         .select('-passwordHash');
       
       if (user && user.status === 'ACTIVE') {

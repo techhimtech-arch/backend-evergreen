@@ -34,7 +34,7 @@ class AuthService {
     await user.save();
 
     // Get user with role for response
-    const userWithRole = await User.findById(user._id).populate('roleId');
+    const userWithRole = await User.findById(user._id).populate({ path: 'roleId', strictPopulate: false });
 
     // Log registration
     await LoginAudit.logLoginAttempt({
@@ -181,7 +181,7 @@ class AuthService {
 
     // Find user with role
     const user = await User.findById(decoded.userId).populate({ path: 'roleId', strictPopulate: false });
-    if (!user || !user.isActive) {
+    const isActive = user && (user.status === 'ACTIVE' || user.isActive || user.status === 'Active'); if (!user || !isActive) {
       // Revoke the token family for security
       await RefreshToken.revokeFamily(decoded.family, 'security');
       throw new Error('User not found or inactive');
@@ -191,8 +191,10 @@ class AuthService {
     const newPayload = {
       userId: user._id,
       email: user.email,
-      role: user.roleId.name,
-      roleId: user.roleId._id,
+      role: user.roleId?.name || (user.userType === 'SUPER_ADMIN' ? 'superadmin' : 'user'),
+      roleId: user.roleId?._id || user.roleId,
+      organizationId: user.organizationId,
+      userType: user.userType,
     };
 
     const newAccessToken = generateAccessToken(newPayload);
@@ -281,7 +283,7 @@ class AuthService {
    * Logout from all devices
    */
   async logoutAll(userId, requestInfo = {}) {
-    const user = await User.findById(userId).populate('roleId');
+    const user = await User.findById(userId).populate({ path: 'roleId', strictPopulate: false });
     if (!user) {
       throw new Error('User not found');
     }
@@ -412,7 +414,7 @@ class AuthService {
     await RefreshToken.revokeAllUserTokens(user._id, 'security');
 
     // Get user role for logging
-    const userWithRole = await User.findById(user._id).populate('roleId');
+    const userWithRole = await User.findById(user._id).populate({ path: 'roleId', strictPopulate: false });
 
     // Log password reset
     await LoginAudit.logLoginAttempt({
