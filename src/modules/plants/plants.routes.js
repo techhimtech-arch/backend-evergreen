@@ -7,7 +7,7 @@ const {
   updatePlant,
   deletePlant
 } = require('./plants.controller');
-const { protect } = require('../../middleware/auth.middleware');
+const { authenticate } = require('../../middleware/auth.middleware');
 
 /**
  * @swagger
@@ -95,8 +95,10 @@ router.get('/', getPlants);
 router.get('/:id', getPlant);
 
 // Protected write access (can add roles later like admin only)
-router.post('/', protect, createPlant);
-router.put('/:id', protect, updatePlant);
-router.delete('/:id', protect, deletePlant);
+router.post('/', authenticate, createPlant);
+router.put('/:id', authenticate, updatePlant);
+router.delete('/:id', authenticate, deletePlant);
+
+module.exports = router;
 
 module.exports = router;

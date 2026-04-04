@@ -7,7 +7,7 @@ const {
   updateTree,
   deleteTree
 } = require('./trees.controller');
-const { protect } = require('../../middleware/auth.middleware');
+const { authenticate } = require('../../middleware/auth.middleware');
 
 /**
  * @swagger
@@ -97,8 +97,8 @@ const { protect } = require('../../middleware/auth.middleware');
 router.get('/', getTrees);
 router.get('/:id', getTree);
 
-router.post('/', protect, registerTree);
-router.put('/:id', protect, updateTree);
-router.delete('/:id', protect, deleteTree); // Add RBAC later
+router.post('/', authenticate, registerTree);
+router.put('/:id', authenticate, updateTree);
+router.delete('/:id', authenticate, deleteTree); // Add RBAC later
 
 module.exports = router;
