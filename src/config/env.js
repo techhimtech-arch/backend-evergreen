@@ -10,6 +10,11 @@ dotenv.config({
   path: path.resolve(process.cwd(), '.env')
 });
 
+console.log('Dotenv loaded, checking key vars:');
+console.log('process.env.MONGO_URI:', process.env.MONGO_URI ? 'EXISTS' : 'MISSING');
+console.log('process.env.JWT_SECRET:', process.env.JWT_SECRET ? 'EXISTS' : 'MISSING');
+console.log('process.env.JWT_REFRESH_SECRET:', process.env.JWT_REFRESH_SECRET ? 'EXISTS' : 'MISSING');
+
 /**
  * Validate and get configuration
  */

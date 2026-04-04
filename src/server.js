@@ -2,6 +2,13 @@ const logger = require('./config/logger');
 
 logger.info('Server startup initiated');
 
+// Debug environment variables
+console.log("MONGO_URI:", process.env.MONGO_URI ? "SET" : "UNDEFINED");
+console.log("JWT_SECRET:", process.env.JWT_SECRET ? "SET" : "UNDEFINED");
+console.log("JWT_REFRESH_SECRET:", process.env.JWT_REFRESH_SECRET ? "SET" : "UNDEFINED");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("PORT:", process.env.PORT);
+
 const { app, connectRedis } = require('./app');
 const config = require('./config/env');
 const connectDB = require('./config/database');
