@@ -223,7 +223,7 @@ class AuthService {
     await LoginAudit.logLoginAttempt({
       userId: user._id,
       email: user.email,
-      role: user.roleId.name,
+      role: user.roleId?.name || (user.userType === 'SUPER_ADMIN' ? 'superadmin' : 'user'),
       schoolId: user.schoolId,
       action: 'token_refresh',
       ipAddress: requestInfo.ipAddress,

@@ -1,4 +1,4 @@
-const { verifyAccessToken, extractTokenFromHeader } = require('../utils/jwt');
+﻿const { verifyAccessToken, extractTokenFromHeader } = require('../utils/jwt');
 const { sendUnauthorized, sendForbidden } = require('../utils/response');
 const logger = require('../config/logger');
 const User = require('../models/User');
@@ -28,13 +28,13 @@ const authenticateToken = async (req, res, next) => {
       return sendUnauthorized(res, 'User not found');
     }
 
-    if (user.status !== 'ACTIVE') {
+    if (user.status !== 'ACTIVE' && user.status !== 'Active' && !user.isActive) {
       return sendUnauthorized(res, 'User account is not active');
     }
 
     // Get user roles
-    const userRoles = await UserRole.findActiveRolesForUser(user._id);
-    
+    const userRoles = await UserRole.find({ userId: user._id }).populate('roleId');
+
     // Get all permissions for user
     const userPermissions = await getUserPermissions(user._id);
 
@@ -45,8 +45,8 @@ const authenticateToken = async (req, res, next) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      userTypeId: user.userTypeId._id,
-      userType: user.userTypeId.name,
+      userTypeId: user.userTypeId?._id || null,
+      userType: user.userTypeId?.name || user.userType,
       status: user.status,
       schoolId: user.schoolId,
       roles: userRoles.map(ur => ur.roleId),
@@ -56,7 +56,7 @@ const authenticateToken = async (req, res, next) => {
     logger.info('User authenticated successfully', {
       userId: user._id,
       email: user.email,
-      userType: user.userTypeId.name,
+      userType: user.userTypeId?.name || user.userType,
       rolesCount: userRoles.length,
       permissionsCount: userPermissions.length
     });
@@ -216,8 +216,7 @@ const optionalAuth = async (req, res, next) => {
         .select('-passwordHash');
       
       if (user && user.status === 'ACTIVE') {
-        const userRoles = await UserRole.findActiveRolesForUser(user._id);
-        const userPermissions = await getUserPermissions(user._id);
+        const userRoles = await UserRole.find({ userId: user._id }).populate('roleId');      
         
         req.user = {
           userId: user._id,
@@ -225,8 +224,8 @@ const optionalAuth = async (req, res, next) => {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          userTypeId: user.userTypeId._id,
-          userType: user.userTypeId.name,
+          userTypeId: user.userTypeId?._id || null,
+          userType: user.userTypeId?.name || user.userType,
           status: user.status,
           schoolId: user.schoolId,
           roles: userRoles.map(ur => ur.roleId),
