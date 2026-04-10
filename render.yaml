@@ -1,0 +1,93 @@
+services:
+  # Web Service
+  - type: web
+    name: hpevergreen-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_EXPIRY
+        value: 15m
+      - key: JWT_REFRESH_EXPIRY
+        value: 7d
+      - key: BCRYPT_ROUNDS
+        value: 12
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX
+        value: 100
+      - key: AUTH_RATE_LIMIT_MAX
+        value: 5
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_FILE
+        value: logs/app.log
+      - key: REDIS_URL
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAX_FILE_SIZE
+        value: 5242880
+      - key: ALLOWED_FILE_TYPES
+        value: jpg,jpeg,png,pdf,doc,docx
+      - key: API_VERSION
+        value: v1
+      - key: API_PREFIX
+        value: /api
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  # MongoDB Service
+  - type: pserv
+    name: mongodb
+    runtime: image
+    image:
+      url: mongo:latest
+    plan: free
+    disk:
+      name: mongodb-data
+      mountPath: /data/db
+      sizeGB: 1
+    envVars:
+      - key: MONGO_INITDB_ROOT_USERNAME
+        value: admin
+      - key: MONGO_INITDB_ROOT_PASSWORD
+        generateValue: true
+
+  # Redis Service
+  - type: pserv
+    name: redis
+    runtime: image
+    image:
+      url: redis:alpine
+    plan: free
+    envVars:
+      - key: REDIS_PASSWORD
+        generateValue: true

@@ -32,7 +32,7 @@ router.use(authenticate);
  */
 // Get all roles - accessible to multiple roles
 router.get('/', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER'),
   rolesController.getRoles
 );
 
@@ -52,7 +52,7 @@ router.get('/',
  */
 // Get available permissions - admin only
 router.get('/permissions', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   rolesController.getAvailablePermissions
 );
 
@@ -72,7 +72,7 @@ router.get('/permissions',
  */
 // Get role statistics - admin only
 router.get('/stats', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   rolesController.getRoleStats
 );
 
@@ -124,7 +124,7 @@ router.get('/stats',
  */
 // Create role - superadmin only
 router.post('/', 
-  authorizeRoles('superadmin'),
+  authorizeRoles('SUPER_ADMIN'),
   [
     body('name').trim().isLength({ min: 2, max: 50 }).withMessage('Name must be between 2 and 50 characters'),
     body('description').trim().isLength({ min: 5, max: 200 }).withMessage('Description must be between 5 and 200 characters'),
@@ -161,7 +161,7 @@ router.post('/',
  *         description: Forbidden - insufficient permissions
  */
 router.get('/:name', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER'),
   rolesController.getRoleByName
 );
 
@@ -189,7 +189,7 @@ router.get('/:name',
  *         description: Forbidden - insufficient permissions
  */
 router.get('/:name/permissions', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER'),
   rolesController.getRolePermissions
 );
 
@@ -223,7 +223,7 @@ router.get('/:name/permissions',
  *         description: Forbidden - insufficient permissions
  */
 router.get('/:name/permissions/:permission', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER'),
   rolesController.checkRolePermission
 );
 
@@ -270,7 +270,7 @@ router.get('/:name/permissions/:permission',
  *         description: Role not found
  */
 router.put('/:name', 
-  authorizeRoles('superadmin'),
+  authorizeRoles('SUPER_ADMIN'),
   [
     body('description').optional().trim().isLength({ min: 5, max: 200 }).withMessage('Description must be between 5 and 200 characters'),
     body('permissions').optional().isArray().withMessage('Permissions must be an array'),
@@ -304,7 +304,7 @@ router.put('/:name',
  *         description: Forbidden - superadmin only
  */
 router.delete('/:name', 
-  authorizeRoles('superadmin'),
+  authorizeRoles('SUPER_ADMIN'),
   rolesController.deleteRole
 );
 
@@ -348,7 +348,7 @@ router.delete('/:name',
  *         description: Role not found
  */
 router.post('/:name/permissions', 
-  authorizeRoles('superadmin'),
+  authorizeRoles('SUPER_ADMIN'),
   [
     body('permissions').isArray({ min: 1 }).withMessage('At least one permission is required'),
     validate

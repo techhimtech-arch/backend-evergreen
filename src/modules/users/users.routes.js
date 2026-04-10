@@ -81,7 +81,7 @@ router.use(authenticate);
  *         description: Server error
  */
 router.post('/', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   createUserValidation, 
   validate, 
   usersController.createUser
@@ -133,7 +133,7 @@ router.post('/',
  *         description: Server error
  */
 router.get('/', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   getUsersValidation, 
   validate, 
   usersController.getUsers
@@ -169,7 +169,7 @@ router.get('/',
  *         description: Forbidden - insufficient permissions
  */
 router.get('/search', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   usersController.searchUsers
 );
 
@@ -188,7 +188,7 @@ router.get('/search',
  *         description: Forbidden - insufficient permissions
  */
 router.get('/stats', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   usersController.getUserStats
 );
 
@@ -227,7 +227,7 @@ router.get('/stats',
  *         description: Forbidden - insufficient permissions
  */
 router.post('/bulk-update', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   [
     body('userIds').isArray({ min: 1 }).withMessage('User IDs array is required'),
     body('updateData').isObject().withMessage('Update data object is required'),
@@ -262,7 +262,7 @@ router.post('/bulk-update',
  *         description: Forbidden - insufficient permissions
  */
 router.get('/:userId', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER'),
   userIdValidation,
   validate,
   usersController.getUserById
@@ -317,7 +317,7 @@ router.get('/:userId',
  *         description: User not found
  */
 router.put('/:userId', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   updateUserValidation, 
   validate,
   usersController.updateUser
@@ -347,7 +347,7 @@ router.put('/:userId',
  *         description: Forbidden - insufficient permissions
  */
 router.delete('/:userId', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   userIdValidation,
   validate,
   usersController.deleteUser
@@ -377,7 +377,7 @@ router.delete('/:userId',
  *         description: Forbidden - superadmin only
  */
 router.delete('/:userId/hard', 
-  authorizeRoles('superadmin'),
+  authorizeRoles('SUPER_ADMIN'),
   userIdValidation,
   validate,
   usersController.hardDeleteUser
@@ -421,7 +421,7 @@ router.delete('/:userId/hard',
  *         description: User not found
  */
 router.patch('/:userId/status', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   userIdValidation,
   [
     body('isActive').isBoolean().withMessage('isActive must be a boolean'),
@@ -469,7 +469,7 @@ router.patch('/:userId/status',
  *         description: User not found
  */
 router.post('/:userId/reset-password', 
-  authorizeRoles('superadmin', 'school_admin'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN'),
   userIdValidation,
   [
     body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
@@ -505,9 +505,9 @@ router.post('/:userId/reset-password',
  *         description: Forbidden - insufficient permissions
  */
 router.get('/role/:role', 
-  authorizeRoles('superadmin', 'school_admin', 'teacher'),
+  authorizeRoles('SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER'),
   [
-    body('role').isIn(['superadmin', 'school_admin', 'teacher', 'accountant', 'parent', 'student']).withMessage('Invalid role'),
+    body('role').isIn(['superadmin', 'ORG_ADMIN', 'VOLUNTEER', 'accountant', 'parent', 'student']).withMessage('Invalid role'),
     validate
   ],
   usersController.getUsersByRole

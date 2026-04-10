@@ -1,4 +1,5 @@
 const User = require('../../models/User');
+const Role = require('../../models/Role');
 const { hashPassword } = require('../../utils/password');
 const logger = require('../../config/logger');
 
@@ -18,6 +19,17 @@ class UsersService {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
+    // Determine role based on userType
+    const roleMapping = {
+      'SUPER_ADMIN': 'SUPER_ADMIN',
+      'ORG_ADMIN': 'ADMIN',
+      'VOLUNTEER': 'USER',
+      'CITIZEN': 'USER'
+    };
+    
+    const roleName = roleMapping[userType] || 'USER';
+    const role = await Role.findOne({ name: roleName });
+
     // Create user
     const user = new User({
       firstName,
@@ -25,6 +37,7 @@ class UsersService {
       email,
       passwordHash: hashedPassword,
       userType: userType || 'CITIZEN',
+      roleId: role ? role._id : null,
       organizationId,
       status,
     });
@@ -35,6 +48,7 @@ class UsersService {
       userId: user._id,
       email: user.email,
       userType: user.userType,
+      roleId: user.roleId,
       creatorId,
     });
 

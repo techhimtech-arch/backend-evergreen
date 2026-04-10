@@ -202,17 +202,17 @@ router.use(authenticate);
 
 // List and Create
 router.route('/')
-  .get(authorizeRoles('superadmin'), organizationsController.getOrganizations)
-  .post(authorizeRoles('superadmin'), createValidation, validate, organizationsController.createOrganization);
+  .get(authorizeRoles('SUPER_ADMIN'), organizationsController.getOrganizations)
+  .post(authorizeRoles('SUPER_ADMIN'), createValidation, validate, organizationsController.createOrganization);
 
 // View, Update, Toggle & Delete
 router.route('/:id')
   .get(idValidation, validate, organizationsController.getOrganizationById)
-  .put(authorizeRoles('superadmin'), updateValidation, validate, organizationsController.updateOrganization)
-  .delete(authorizeRoles('superadmin'), idValidation, validate, organizationsController.deleteOrganization);
+  .put(authorizeRoles('SUPER_ADMIN'), updateValidation, validate, organizationsController.updateOrganization)
+  .delete(authorizeRoles('SUPER_ADMIN'), idValidation, validate, organizationsController.deleteOrganization);
 
 router.patch('/:id/status',
-  authorizeRoles('superadmin'),
+  authorizeRoles('SUPER_ADMIN'),
   idValidation,
   validate,
   organizationsController.toggleStatus

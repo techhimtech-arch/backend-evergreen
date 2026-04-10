@@ -63,8 +63,8 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Organization",
     required: [function() {
-      // Organization is not required for SUPER_ADMIN
-      return this.userType !== 'SUPER_ADMIN';
+      // Organization is not required for SUPER_ADMIN and CITIZEN
+      return !['SUPER_ADMIN', 'CITIZEN'].includes(this.userType);
     }, 'Organization is required']
   },
   
@@ -75,6 +75,11 @@ const userSchema = new mongoose.Schema({
       message: '{VALUE} is not a valid user type'
     },
     default: "CITIZEN"
+  },
+  
+  roleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Role"
   },
   
   status: {
@@ -258,7 +263,7 @@ userSchema.statics.findByEmailWithRole = function(email) {
   // `select('+passwordHash')` ensures that we can verify the password.
   // Note: we might need to adjust auth.service.js or simulate what it expects
   // auth.service expects: { isActive: true, roleId: { name: 'superadmin', ... }, comparePassword, email, etc. }
-  return this.findOne({ email }).select('+passwordHash');
+  return this.findOne({ email }).select('+passwordHash').populate({ path: 'roleId', strictPopulate: false });
 };
 
 // Static method to find by email with organization and roles

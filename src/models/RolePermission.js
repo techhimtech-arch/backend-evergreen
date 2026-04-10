@@ -13,8 +13,8 @@ const rolePermissionSchema = new mongoose.Schema({
   },
   assignedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
+    // Not required for system assignments during seeding
   },
   assignedAt: {
     type: Date,
