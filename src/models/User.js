@@ -63,15 +63,15 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Organization",
     required: [function() {
-      // Organization is not required for SUPER_ADMIN and CITIZEN
-      return !['SUPER_ADMIN', 'CITIZEN'].includes(this.userType);
+      // Organization is not required for SUPER_ADMIN, OFFICER and CITIZEN
+      return !['SUPER_ADMIN', 'OFFICER', 'CITIZEN'].includes(this.userType);
     }, 'Organization is required']
   },
   
   userType: {
     type: String,
     enum: {
-      values: ["SUPER_ADMIN", "ORG_ADMIN", "VOLUNTEER", "CITIZEN"],
+      values: ["SUPER_ADMIN", "ORG_ADMIN", "OFFICER", "VOLUNTEER", "CITIZEN"],
       message: '{VALUE} is not a valid user type'
     },
     default: "CITIZEN"

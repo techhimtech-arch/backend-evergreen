@@ -4,7 +4,10 @@ const {
   getAssignments,
   getAssignment,
   updateAssignment,
-  deleteAssignment
+  deleteAssignment,
+  updateProgress,
+  verifyAssignment,
+  getOfficerAssignments
 } = require('./assignments.controller');
 const { authenticate } = require('../../middleware/auth.middleware');
 
@@ -128,5 +131,105 @@ router.route('/:id')
   .get(authenticate, getAssignment)
   .put(authenticate, updateAssignment)
   .delete(authenticate, deleteAssignment);
+
+/**
+ * @swagger
+ * /api/v1/assignments/{id}/progress:
+ *   post:
+ *     summary: Update assignment progress
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plantsPlanted:
+ *                 type: number
+ *               notes:
+ *                 type: string
+ *               photos:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Progress updated successfully
+ */
+router.post('/:id/progress', authenticate, updateProgress);
+
+/**
+ * @swagger
+ * /api/v1/assignments/{id}/verify:
+ *   post:
+ *     summary: Verify or reject assignment
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               approved:
+ *                 type: boolean
+ *               verificationNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Assignment verified successfully
+ */
+router.post('/:id/verify', authenticate, verifyAssignment);
+
+/**
+ * @swagger
+ * /api/v1/assignments/officer/{officerId}:
+ *   get:
+ *     summary: Get assignments by officer
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: officerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Officer assignments retrieved successfully
+ */
+router.get('/officer/:officerId', authenticate, getOfficerAssignments);
+
+/**
+ * @swagger
+ * /api/v1/assignments/my-assignments:
+ *   get:
+ *     summary: Get current user's assignments (for officers)
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: My assignments retrieved successfully
+ */
+router.get('/my-assignments', authenticate, getOfficerAssignments);
 
 module.exports = router;

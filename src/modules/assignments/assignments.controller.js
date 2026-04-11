@@ -1,5 +1,6 @@
 const expressAsyncHandler = require('express-async-handler');
 const Assignment = require('../../models/Assignment');
+const User = require('../../models/User');
 const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
 
 exports.createAssignment = expressAsyncHandler(async (req, res) => {
@@ -111,6 +112,106 @@ exports.deleteAssignment = expressAsyncHandler(async (req, res) => {
 
     await assignment.deleteOne();
     return sendSuccess(res, 200, 'Assignment deleted successfully', {});
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+});
+
+// Progress tracking methods
+exports.updateProgress = expressAsyncHandler(async (req, res) => {
+  try {
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) return sendNotFound(res, 'Assignment not found');
+
+    // Only assigned officer or admin can update progress
+    if (req.user.userType !== 'SUPER_ADMIN' && 
+        req.user.userType !== 'ORG_ADMIN' &&
+        assignment.assignedOfficer.toString() !== req.user._id.toString()) {
+      return sendError(res, 403, 'Not authorized to update progress');
+    }
+
+    const { plantsPlanted, notes, photos } = req.body;
+    
+    const progressUpdate = {
+      date: new Date(),
+      plantsPlanted: plantsPlanted || 0,
+      notes: notes || '',
+      photos: photos || [],
+      addedBy: req.user._id
+    };
+
+    assignment.progressUpdates.push(progressUpdate);
+    assignment.actualPlantsPlanted += plantsPlanted || 0;
+    
+    if (assignment.status === 'PENDING') {
+      assignment.status = 'IN_PROGRESS';
+    }
+    
+    if (assignment.actualPlantsPlanted >= assignment.targetPlants) {
+      assignment.status = 'COMPLETED';
+      assignment.completionDate = new Date();
+    }
+
+    await assignment.save();
+    return sendSuccess(res, 200, 'Progress updated successfully', assignment);
+  } catch (error) {
+    return sendError(res, 400, error.message);
+  }
+});
+
+// Verification methods
+exports.verifyAssignment = expressAsyncHandler(async (req, res) => {
+  try {
+    const assignment = await Assignment.findById(req.params.id);
+    if (!assignment) return sendNotFound(res, 'Assignment not found');
+
+    // Only admin can verify
+    if (req.user.userType !== 'SUPER_ADMIN' && req.user.userType !== 'ORG_ADMIN') {
+      return sendError(res, 403, 'Not authorized to verify assignments');
+    }
+
+    if (assignment.status !== 'COMPLETED') {
+      return sendError(res, 400, 'Only completed assignments can be verified');
+    }
+
+    const { verificationNotes, approved } = req.body;
+    
+    assignment.verifiedBy = req.user._id;
+    assignment.verificationDate = new Date();
+    assignment.verificationNotes = verificationNotes || '';
+    
+    if (approved) {
+      assignment.status = 'VERIFIED';
+    } else {
+      assignment.status = 'REJECTED';
+      assignment.rejectionReason = verificationNotes || 'Verification failed';
+    }
+
+    await assignment.save();
+    return sendSuccess(res, 200, `Assignment ${approved ? 'verified' : 'rejected'} successfully`, assignment);
+  } catch (error) {
+    return sendError(res, 400, error.message);
+  }
+});
+
+// Get assignments by officer
+exports.getOfficerAssignments = expressAsyncHandler(async (req, res) => {
+  try {
+    const officerId = req.params.officerId || req.user._id;
+    
+    // Security check - only get own assignments unless admin
+    if (req.user.userType !== 'SUPER_ADMIN' && 
+        req.user.userType !== 'ORG_ADMIN' && 
+        officerId !== req.user._id.toString()) {
+      return sendError(res, 403, 'Not authorized to view these assignments');
+    }
+
+    const assignments = await Assignment.find({ assignedOfficer: officerId })
+      .populate('groupId', 'groupName village')
+      .populate('assignedOfficer', 'firstName lastName')
+      .populate('organizationId', 'name');
+    
+    return sendSuccess(res, 200, 'Officer assignments retrieved successfully', assignments);
   } catch (error) {
     return sendError(res, 500, error.message);
   }
