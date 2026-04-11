@@ -1,15 +1,74 @@
 const Tree = require('../../models/Tree');
+const Assignment = require('../../models/Assignment');
 const { sendSuccess, sendError, sendNotFound } = require('../../utils/response');
+
+// Helper function to generate human-readable tree ID
+const generateTreeId = async (assignmentId) => {
+  try {
+    const assignment = await Assignment.findById(assignmentId).populate('groupId');
+    if (!assignment) {
+      throw new Error('Assignment not found');
+    }
+
+    const group = assignment.groupId;
+    const district = group.district ? group.district.substring(0, 3).toUpperCase() : 'HP';
+    const year = new Date().getFullYear();
+    
+    // Count existing trees for this assignment
+    const treeCount = await Tree.countDocuments({ assignmentId });
+    const sequence = String(treeCount + 1).padStart(4, '0');
+    
+    return `${district}-${year}-${sequence}`;
+  } catch (error) {
+    // Fallback to simpler format
+    const year = new Date().getFullYear();
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `HP-${year}-${random}`;
+  }
+};
 
 // @desc    Get all trees (with pagination/filters)
 // @route   GET /api/v1/trees
 // @access  Public/Private
 exports.getTrees = async (req, res) => {
   try {
-    const trees = await Tree.find()
-      .populate('plantTypeId', 'name scientificName category')
-      .populate('plantedBy', 'name email');
-    return sendSuccess(res, 200, 'Trees retrieved', trees);
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      assignmentId,
+      groupId,
+      speciesId,
+      plantedBy
+    } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (assignmentId) filter.assignmentId = assignmentId;
+    if (groupId) filter.groupId = groupId;
+    if (speciesId) filter.speciesId = speciesId;
+    if (plantedBy) filter.plantedBy = plantedBy;
+
+    const trees = await Tree.find(filter)
+      .populate('assignmentId', 'targetPlants landArea')
+      .populate('eventId', 'eventName eventDate location')
+      .populate('speciesId', 'name scientificName category')
+      .populate('groupId', 'groupName village district')
+      .populate('plantedBy', 'firstName lastName email')
+      .sort({ plantedDate: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Tree.countDocuments(filter);
+
+    return sendSuccess(res, 200, 'Trees retrieved', {
+      trees,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
   } catch (error) {
     return sendError(res, 500, error.message);
   }
@@ -20,14 +79,38 @@ exports.getTrees = async (req, res) => {
 // @access  Private (authenticated user)
 exports.registerTree = async (req, res) => {
   try {
+    const { assignmentId, eventId, speciesId, groupId, ...otherData } = req.body;
+
+    // Validate required fields
+    if (!assignmentId || !eventId || !speciesId || !groupId) {
+      return sendError(res, 400, 'Missing required fields: assignmentId, eventId, speciesId, groupId');
+    }
+
+    // Generate human-readable tree ID
+    const treeId = await generateTreeId(assignmentId);
+
     // Inject the logged-in user automatically as the planter
     const treeData = {
-      ...req.body,
+      treeId,
+      assignmentId,
+      eventId,
+      speciesId,
+      groupId,
       plantedBy: req.user._id,
-      plantedAt: Date.now()
+      plantedDate: new Date(),
+      ...otherData
     };
     
     const tree = await Tree.create(treeData);
+    
+    // Populate relations for response
+    await tree.populate([
+      { path: 'assignmentId', select: 'targetPlants landArea' },
+      { path: 'eventId', select: 'eventName eventDate location' },
+      { path: 'speciesId', select: 'name scientificName category' },
+      { path: 'groupId', select: 'groupName village district' },
+      { path: 'plantedBy', select: 'firstName lastName email' }
+    ]);
     
     return sendSuccess(res, 201, 'Tree registered successfully', tree);
   } catch (error) {
@@ -41,8 +124,12 @@ exports.registerTree = async (req, res) => {
 exports.getTree = async (req, res) => {
   try {
     const tree = await Tree.findById(req.params.id)
-       .populate('plantTypeId', 'name scientificName category')
-       .populate('plantedBy', 'name email');
+       .populate('assignmentId', 'targetPlants landArea')
+       .populate('eventId', 'eventName eventDate location')
+       .populate('speciesId', 'name scientificName category')
+       .populate('groupId', 'groupName village district')
+       .populate('plantedBy', 'firstName lastName email')
+       .populate('verifiedBy', 'firstName lastName');
        
     if (!tree) {
       return sendNotFound(res, 'Tree not found');

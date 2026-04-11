@@ -6,10 +6,36 @@ const { sendSuccess, sendError, sendNotFound } = require('../../utils/response')
 // @access  Public/Private
 exports.getEvents = async (req, res) => {
   try {
-    const events = await PlantationEvent.find()
-      .populate('organizationId', 'name')
-      .populate('organizedBy', 'name email');
-    return sendSuccess(res, 200, 'Events retrieved successfully', events);
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      assignmentId,
+      organizedBy
+    } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (assignmentId) filter.assignmentId = assignmentId;
+    if (organizedBy) filter.organizedBy = organizedBy;
+
+    const events = await PlantationEvent.find(filter)
+      .populate('assignmentId', 'targetPlants landArea')
+      .populate('organizedBy', 'firstName lastName email')
+      .sort({ eventDate: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await PlantationEvent.countDocuments(filter);
+
+    return sendSuccess(res, 200, 'Events retrieved successfully', {
+      events,
+      pagination: {
+        current: page,
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
   } catch (error) {
     return sendError(res, 500, error.message);
   }
@@ -20,13 +46,26 @@ exports.getEvents = async (req, res) => {
 // @access  Private (Org Admin, Superadmin)
 exports.createEvent = async (req, res) => {
   try {
-    const eventData = {
-      ...req.body,
-      organizedBy: req.user.userId, // Logged in user
-      organizationId: req.body.organizationId || req.user.organizationId
+    const { assignmentId, ...eventData } = req.body;
+
+    // Validate required fields
+    if (!assignmentId) {
+      return sendError(res, 400, 'Assignment ID is required');
+    }
+
+    const newEventData = {
+      assignmentId,
+      organizedBy: req.user._id, // Logged in user
+      ...eventData
     };
     
-    const event = await PlantationEvent.create(eventData);
+    const event = await PlantationEvent.create(newEventData);
+    
+    // Populate for response
+    await event.populate([
+      { path: 'assignmentId', select: 'targetPlants landArea' },
+      { path: 'organizedBy', select: 'firstName lastName email' }
+    ]);
     
     return sendSuccess(res, 201, 'Plantation event created successfully', event);
   } catch (error) {
@@ -40,8 +79,8 @@ exports.createEvent = async (req, res) => {
 exports.getEventById = async (req, res) => {
   try {
     const event = await PlantationEvent.findById(req.params.id)
-      .populate('organizationId', 'name')
-      .populate('organizedBy', 'name email');
+      .populate('assignmentId', 'targetPlants landArea')
+      .populate('organizedBy', 'firstName lastName email');
        
     if (!event) {
       return sendNotFound(res, 'Event not found');
