@@ -1,17 +1,13 @@
-# HP Evergreen - Frontend Integration Guide
-## Quick Start for Frontend Developers
+[# HP Evergreen - Frontend Integration Guide
+## Complete Backend-Frontend Sync Documentation
 
-### 🚀 Getting Started
-
-1. **Base URL**: `http://localhost:5000/api/v1`
+### 1. **Base URL**: `http://localhost:5000/api/v1`
 2. **Authentication**: JWT Bearer tokens required for all requests
 3. **Response Format**: Consistent JSON structure across all endpoints
 
 ---
 
-## 🔐 Authentication Flow
-
-### 1. User Registration/Login
+## 1. User Registration/Login
 ```javascript
 // Login
 const login = async (email, password) => {
@@ -456,4 +452,4 @@ const withRetry = async (apiCall, maxRetries = 3) => {
 
 ---
 
-*Happy Coding! 🌳🚀*
+*Happy Coding! 🌳🚀*]

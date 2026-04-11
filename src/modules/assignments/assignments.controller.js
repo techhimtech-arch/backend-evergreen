@@ -6,9 +6,26 @@ exports.createAssignment = expressAsyncHandler(async (req, res) => {
   try {
     let assignmentData = { ...req.body };
 
-    // SUPER_ADMIN can assign to any org, ORG_ADMIN only to their own
+    // Auto-add organizationId from authenticated user
     if (req.user.userType !== 'SUPER_ADMIN') {
       assignmentData.organizationId = req.user.organizationId;
+    } else {
+      // For SUPER_ADMIN, use provided organizationId or a default if available
+      if (!assignmentData.organizationId && req.user.organizationId) {
+        assignmentData.organizationId = req.user.organizationId;
+      }
+      // If SUPER_ADMIN doesn't have organizationId and doesn't provide one, 
+      // we need to either require it or set a default organization
+      if (!assignmentData.organizationId) {
+        // Try to get first available organization or return error
+        const Organization = require('../../models/Organization');
+        const firstOrg = await Organization.findOne();
+        if (firstOrg) {
+          assignmentData.organizationId = firstOrg._id;
+        } else {
+          return sendError(res, 400, 'Organization ID is required for SUPER_ADMIN. Please provide organizationId or create an organization first.');
+        }
+      }
     }
 
     const assignment = await Assignment.create(assignmentData);
