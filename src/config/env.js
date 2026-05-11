@@ -51,8 +51,8 @@ const config = {
   
   cors: {
     origins: env.FRONTEND_URL 
-      ? [env.FRONTEND_URL, 'http://localhost:4200', 'http://localhost:5173', 'http://localhost:3000']
-      : ['http://localhost:4200', 'http://localhost:5173', 'http://localhost:3000'] // Default local dev ports (Angular, Vite, React)
+      ? [env.FRONTEND_URL, 'http://localhost:4200', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:3001']
+      : ['http://localhost:4200', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:3001']
   },
   
   logging: {

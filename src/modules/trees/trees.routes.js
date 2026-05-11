@@ -218,17 +218,19 @@ const { authenticate } = require('../../middleware/auth.middleware');
  *         description: Trees needing inspection
  */
 
+// Static routes MUST come before /:id to avoid route shadowing
+router.get('/needing-inspection', authenticate, getTreesNeedingInspection);
+router.get('/health/:status', authenticate, getTreesByHealthStatus);
+
 router.get('/', getTrees);
 router.get('/:id', getTree);
 
 router.post('/', authenticate, registerTree);
 router.put('/:id', authenticate, updateTree);
-router.delete('/:id', authenticate, deleteTree); // Add RBAC later
+router.delete('/:id', authenticate, deleteTree);
 
-// Phase 2: Enhanced monitoring routes
+// Tree photo & health update sub-routes
 router.post('/:id/photos', authenticate, addTreePhoto);
 router.patch('/:id/health', authenticate, updateTreeHealth);
-router.get('/health/:status', authenticate, getTreesByHealthStatus);
-router.get('/needing-inspection', authenticate, getTreesNeedingInspection);
 
 module.exports = router;

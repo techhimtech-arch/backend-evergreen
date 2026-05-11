@@ -18,7 +18,7 @@ exports.createTreeMonitoring = async (req, res) => {
     // Create monitoring record with logged-in user
     const monitoringRecord = await TreeMonitoring.create({
       treeId,
-      updatedBy: req.user._id,
+      updatedBy: req.user.userId,
       ...monitoringData
     });
 
@@ -106,7 +106,7 @@ exports.updateTreeMonitoring = async (req, res) => {
   try {
     const updateData = {
       ...req.body,
-      updatedBy: req.user._id
+      updatedBy: req.user.userId
     };
 
     const monitoringRecord = await TreeMonitoring.findByIdAndUpdate(

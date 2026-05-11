@@ -81,9 +81,9 @@ exports.registerTree = async (req, res) => {
   try {
     const { assignmentId, eventId, speciesId, groupId, ...otherData } = req.body;
 
-    // Validate required fields
-    if (!assignmentId || !eventId || !speciesId || !groupId) {
-      return sendError(res, 400, 'Missing required fields: assignmentId, eventId, speciesId, groupId');
+    // Validate required fields (eventId is optional for field workers)
+    if (!assignmentId || !speciesId || !groupId) {
+      return sendError(res, 400, 'Missing required fields: assignmentId, speciesId, groupId');
     }
 
     // Generate human-readable tree ID
@@ -93,13 +93,14 @@ exports.registerTree = async (req, res) => {
     const treeData = {
       treeId,
       assignmentId,
-      eventId,
       speciesId,
       groupId,
-      plantedBy: req.user._id,
+      plantedBy: req.user.userId,  // auth middleware sets userId not _id
       plantedDate: new Date(),
       ...otherData
     };
+    // Only add eventId if provided
+    if (eventId) treeData.eventId = eventId;
     
     const tree = await Tree.create(treeData);
     
@@ -206,7 +207,7 @@ exports.addTreePhoto = async (req, res) => {
     const newPhoto = {
       url,
       caption: caption || '',
-      uploadedBy: req.user._id,
+      uploadedBy: req.user.userId,
       uploadedAt: new Date()
     };
 

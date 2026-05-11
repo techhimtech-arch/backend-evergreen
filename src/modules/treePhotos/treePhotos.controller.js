@@ -33,7 +33,7 @@ exports.uploadTreePhoto = async (req, res) => {
       type: type || 'OTHER',
       caption: caption || '',
       remarks: remarks || '',
-      uploadedBy: req.user._id,
+      uploadedBy: req.user.userId,
       uploadedAt: new Date()
     });
 
@@ -151,7 +151,7 @@ exports.verifyTreePhoto = async (req, res) => {
 
     const updateData = {
       verified: verified !== undefined ? verified : true,
-      verifiedBy: req.user._id,
+      verifiedBy: req.user.userId,
       verifiedAt: new Date()
     };
 

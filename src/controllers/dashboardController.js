@@ -15,7 +15,9 @@ const logger = require('../utils/logger');
 const getDashboardStats = async (req, res) => {
   try {
     // Determine the query conditionally if user is tied to an organization
-    const orgQuery = req.user.role === 'superadmin' || req.user.userType === 'SUPER_ADMIN' 
+    const isSuperAdmin = ['superadmin', 'SUPER_ADMIN', 'super_admin'].includes(req.user.role) 
+      || req.user.userType === 'SUPER_ADMIN';
+    const orgQuery = isSuperAdmin
       ? {} 
       : { organizationId: new mongoose.Types.ObjectId(req.user.organizationId || req.user.schoolId) };
 

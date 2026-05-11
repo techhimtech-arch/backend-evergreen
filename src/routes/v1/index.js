@@ -12,8 +12,11 @@ router.use('/assignments', require('../../modules/assignments/assignments.routes
 router.use('/dashboard', require('./dashboard.routes'));
 router.use('/plants', require('../../modules/plants/plants.routes'));
 router.use('/trees', require('../../modules/trees/trees.routes'));
+router.use('/tree-photos', require('../../modules/treePhotos/treePhotos.routes'));
+router.use('/tree-monitoring', require('../../modules/treeMonitoring/treeMonitoring.routes'));
 router.use('/events', require('../../modules/plantationEvents/plantationEvents.routes'));
 router.use('/inspections', require('../../modules/inspections/inspections.routes'));
+router.use('/reports', require('../../modules/reports/reports.routes'));
 
 // Health check endpoint
 router.get('/health', (req, res) => {

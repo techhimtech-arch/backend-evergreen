@@ -21,7 +21,7 @@ const treeSchema = new mongoose.Schema(
   eventId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "PlantationEvent",
-    required: true
+    required: false  // Optional: field workers may register trees without a formal event
   },
 
   speciesId: {
@@ -86,15 +86,21 @@ const treeSchema = new mongoose.Schema(
     maxlength: 1000
   },
 
-  // Photo management (main plantation photo)
-  photo: {
-    url: String,
-    uploadedAt: {
-      type: Date,
-      default: Date.now
-    },
-    caption: String
-  },
+  // Photo management - array of photos for timeline tracking
+  photos: [
+    {
+      url: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      },
+      caption: String,
+      uploadedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      }
+    }
+  ],
 
   // Inspection tracking
   lastInspectionDate: Date,

@@ -39,7 +39,8 @@ const authenticate = async (req, res, next) => {
 
     // Attach user to request object
     req.user = {
-      userId: user._id,
+      _id: user._id,         // Keep _id for backward compat with controllers
+      userId: user._id,      // Also expose as userId
       email: user.email,
       role: roleName,
       roleId: actualRoleId,
@@ -118,6 +119,7 @@ const optionalAuth = async (req, res, next) => {
         const actualRoleId = user.roleId ? (user.roleId._id || user.roleId) : null;
         
         req.user = {
+          _id: user._id,
           userId: user._id,
           email: user.email,
           role: roleName,
