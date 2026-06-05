@@ -1,6 +1,5 @@
 const path = require('path');
 const dotenv = require('dotenv');
-// const logger = require('./logger'); // Removed to avoid circular dependency
 
 /**
  * Load environment variables
@@ -9,19 +8,11 @@ dotenv.config({
   path: path.resolve(process.cwd(), '.env')
 });
 
-console.log('Dotenv loaded, checking key vars:');
-console.log('process.env.MONGO_URI:', process.env.MONGO_URI ? 'EXISTS' : 'MISSING');
-console.log('process.env.JWT_SECRET:', process.env.JWT_SECRET ? 'EXISTS' : 'MISSING');
-console.log('process.env.JWT_REFRESH_SECRET:', process.env.JWT_REFRESH_SECRET ? 'EXISTS' : 'MISSING');
-
 /**
  * Validate and get configuration
  */
 const { validateEnv } = require('./validateEnv');
 const env = validateEnv();
-
-// Use console.log instead of logger to avoid circular dependency
-console.log('Configuration loaded successfully');
 
 /**
  * Application Configuration

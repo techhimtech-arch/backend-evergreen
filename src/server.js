@@ -2,24 +2,9 @@ const logger = require('./config/logger');
 
 logger.info('Server startup initiated');
 
-// Debug environment variables
-console.log("MONGO_URI:", process.env.MONGO_URI ? "SET" : "UNDEFINED");
-console.log("JWT_SECRET:", process.env.JWT_SECRET ? "SET" : "UNDEFINED");
-console.log("JWT_REFRESH_SECRET:", process.env.JWT_REFRESH_SECRET ? "SET" : "UNDEFINED");
-console.log("NODE_ENV:", process.env.NODE_ENV);
-console.log("PORT:", process.env.PORT);
-
-console.log("Requiring app...");
 const { app, connectRedis } = require('./app');
-console.log("App required successfully");
-
-console.log("Requiring config...");
 const config = require('./config/env');
-console.log("Config required successfully");
-
-console.log("Requiring connectDB...");
 const connectDB = require('./config/database');
-console.log("connectDB required successfully");
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {

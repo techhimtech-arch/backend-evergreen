@@ -7,7 +7,11 @@ const {
   updateTree,
   deleteTree,
   addTreePhoto,
+  getTreePhotos,
+  getTreeTimeline,
   updateTreeHealth,
+  getTreeStatistics,
+  getTreeMapData,
   getTreesByHealthStatus,
   getTreesNeedingInspection
 } = require('./trees.controller');
@@ -221,6 +225,8 @@ const { authenticate } = require('../../middleware/auth.middleware');
 // Static routes MUST come before /:id to avoid route shadowing
 router.get('/needing-inspection', authenticate, getTreesNeedingInspection);
 router.get('/health/:status', authenticate, getTreesByHealthStatus);
+router.get('/statistics', getTreeStatistics);
+router.get('/map-data', getTreeMapData);
 
 router.get('/', getTrees);
 router.get('/:id', getTree);
@@ -230,7 +236,9 @@ router.put('/:id', authenticate, updateTree);
 router.delete('/:id', authenticate, deleteTree);
 
 // Tree photo & health update sub-routes
+router.get('/:id/photos', getTreePhotos);
 router.post('/:id/photos', authenticate, addTreePhoto);
+router.get('/:id/timeline', getTreeTimeline);
 router.patch('/:id/health', authenticate, updateTreeHealth);
 
 module.exports = router;

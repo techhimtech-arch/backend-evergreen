@@ -74,6 +74,139 @@ exports.getTrees = async (req, res) => {
   }
 };
 
+// @desc    Get dashboard-level tree statistics
+// @route   GET /api/v1/trees/statistics
+// @access  Public/Private
+exports.getTreeStatistics = async (req, res) => {
+  try {
+    const totalTrees = await Tree.countDocuments();
+    const statusCounts = await Tree.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    const districtCounts = await Tree.aggregate([
+      {
+        $lookup: {
+          from: 'groups',
+          localField: 'groupId',
+          foreignField: '_id',
+          as: 'group'
+        }
+      },
+      { $unwind: { path: '$group', preserveNullAndEmpty: true } },
+      {
+        $group: {
+          _id: { $ifNull: ['$group.district', 'Unassigned'] },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    const treesByStatus = statusCounts.reduce((acc, item) => {
+      acc[item._id || 'UNKNOWN'] = item.count;
+      return acc;
+    }, {});
+    const deadTrees = treesByStatus.DEAD || 0;
+    const survivalRate = totalTrees > 0 ? Number((((totalTrees - deadTrees) / totalTrees) * 100).toFixed(1)) : 0;
+
+    return sendSuccess(res, 200, 'Tree statistics retrieved', {
+      totalTrees,
+      survivalRate,
+      treesByStatus,
+      districtCounts
+    });
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
+// @desc    Get tree map markers
+// @route   GET /api/v1/trees/map-data
+// @access  Public/Private
+exports.getTreeMapData = async (req, res) => {
+  try {
+    const trees = await Tree.find({
+      latitude: { $exists: true },
+      longitude: { $exists: true }
+    })
+      .populate('speciesId', 'name scientificName category')
+      .populate('groupId', 'groupName village district')
+      .select('treeId latitude longitude location status plantedDate speciesId groupId verificationStatus')
+      .limit(5000);
+
+    const markers = trees.map(tree => ({
+      id: tree._id,
+      treeId: tree.treeId,
+      latitude: tree.latitude,
+      longitude: tree.longitude,
+      location: tree.location,
+      status: tree.status,
+      plantedDate: tree.plantedDate,
+      species: tree.speciesId,
+      group: tree.groupId,
+      verificationStatus: tree.verificationStatus
+    }));
+
+    return sendSuccess(res, 200, 'Tree map data retrieved', markers);
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
+// @desc    Get tree timeline combining planting and photo events
+// @route   GET /api/v1/trees/:id/timeline
+// @access  Public/Private
+exports.getTreeTimeline = async (req, res) => {
+  try {
+    const tree = await Tree.findById(req.params.id)
+      .populate('speciesId', 'name scientificName category')
+      .populate('plantedBy', 'firstName lastName email');
+
+    if (!tree) {
+      return sendNotFound(res, 'Tree not found');
+    }
+
+    const timeline = [
+      {
+        type: 'PLANTED',
+        date: tree.plantedDate,
+        title: 'Tree planted',
+        status: tree.status,
+        remarks: tree.remarks
+      },
+      ...tree.photos.map(photo => ({
+        type: 'PHOTO',
+        date: photo.uploadedAt,
+        title: photo.caption || 'Photo uploaded',
+        url: photo.url
+      }))
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    return sendSuccess(res, 200, 'Tree timeline retrieved', { tree, timeline });
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
+// @desc    Get tree photos
+// @route   GET /api/v1/trees/:id/photos
+// @access  Public/Private
+exports.getTreePhotos = async (req, res) => {
+  try {
+    const tree = await Tree.findById(req.params.id).select('treeId photos');
+    if (!tree) {
+      return sendNotFound(res, 'Tree not found');
+    }
+
+    return sendSuccess(res, 200, 'Tree photos retrieved', {
+      treeId: tree.treeId,
+      photos: tree.photos
+    });
+  } catch (error) {
+    return sendError(res, 500, error.message);
+  }
+};
+
 // @desc    Register a new tree
 // @route   POST /api/v1/trees
 // @access  Private (authenticated user)
@@ -161,7 +294,7 @@ exports.updateTree = async (req, res) => {
     const tree = await Tree.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
-    }).populate('plantTypeId', 'name scientificName category')
+    }).populate('speciesId', 'name scientificName category')
       .populate('plantedBy', 'firstName lastName email');
 
     if (!tree) {
@@ -237,7 +370,7 @@ exports.updateTreeHealth = async (req, res) => {
     const tree = await Tree.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
-    }).populate('plantTypeId', 'name scientificName category')
+    }).populate('speciesId', 'name scientificName category')
       .populate('plantedBy', 'firstName lastName email');
 
     if (!tree) {
@@ -263,7 +396,7 @@ exports.getTreesByHealthStatus = async (req, res) => {
     }
 
     const trees = await Tree.find({ status: status.toUpperCase() })
-      .populate('plantTypeId', 'name scientificName category')
+      .populate('speciesId', 'name scientificName category')
       .populate('plantedBy', 'firstName lastName email')
       .sort({ plantedAt: -1 });
 
@@ -288,7 +421,7 @@ exports.getTreesNeedingInspection = async (req, res) => {
       ],
       status: { $ne: 'DEAD' }
     })
-      .populate('plantTypeId', 'name scientificName category')
+      .populate('speciesId', 'name scientificName category')
       .populate('plantedBy', 'firstName lastName email')
       .sort({ plantedAt: -1 });
 

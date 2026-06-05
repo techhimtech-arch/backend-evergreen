@@ -7,22 +7,8 @@ const { envSchema } = require('./envSchema');
  */
 const validateEnv = () => {
   try {
-    console.log('Validating environment variables...');
-    
     // Parse and validate environment variables
     const env = envSchema.parse(process.env);
-    
-    // Log successful validation (without sensitive data)
-    console.log('Environment variables validated successfully', {
-      nodeEnv: env.NODE_ENV,
-      port: env.PORT,
-      mongoUri: env.MONGO_URI ? 'Configured' : 'Missing',
-      jwtConfigured: env.JWT_SECRET && env.JWT_REFRESH_SECRET,
-      corsConfigured: !!env.FRONTEND_URL,
-      redisConfigured: !!env.REDIS_URL,
-      logLevel: env.LOG_LEVEL
-    });
-    
     return env;
   } catch (error) {
     console.error('Error during environment validation:', error);

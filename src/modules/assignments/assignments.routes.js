@@ -77,6 +77,28 @@ router.route('/')
 
 /**
  * @swagger
+ * /api/v1/assignments/officer/{officerId}:
+ *   get:
+ *     summary: Get assignments by officer
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/officer/:officerId', authenticate, getOfficerAssignments);
+
+/**
+ * @swagger
+ * /api/v1/assignments/my-assignments:
+ *   get:
+ *     summary: Get current user's assignments (for officers)
+ *     tags: [Assignments]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/my-assignments', authenticate, getOfficerAssignments);
+
+/**
+ * @swagger
  * /api/v1/assignments/{id}:
  *   get:
  *     summary: Get assignment details
@@ -197,39 +219,5 @@ router.post('/:id/progress', authenticate, updateProgress);
  *         description: Assignment verified successfully
  */
 router.post('/:id/verify', authenticate, verifyAssignment);
-
-/**
- * @swagger
- * /api/v1/assignments/officer/{officerId}:
- *   get:
- *     summary: Get assignments by officer
- *     tags: [Assignments]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: officerId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Officer assignments retrieved successfully
- */
-router.get('/officer/:officerId', authenticate, getOfficerAssignments);
-
-/**
- * @swagger
- * /api/v1/assignments/my-assignments:
- *   get:
- *     summary: Get current user's assignments (for officers)
- *     tags: [Assignments]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: My assignments retrieved successfully
- */
-router.get('/my-assignments', authenticate, getOfficerAssignments);
 
 module.exports = router;
