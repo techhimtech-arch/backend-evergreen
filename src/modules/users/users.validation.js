@@ -66,8 +66,8 @@ const createUserValidation = [
   
   body('status')
     .optional()
-    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED'])
-    .withMessage('Status must be one of: ACTIVE, SUSPENDED, DELETED'),
+    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED', 'INACTIVE'])
+    .withMessage('Status must be one of: ACTIVE, SUSPENDED, DELETED, INACTIVE'),
   
   handleValidationErrors
 ];
@@ -117,8 +117,8 @@ const updateUserValidation = [
   
   body('status')
     .optional()
-    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED'])
-    .withMessage('Status must be one of: ACTIVE, SUSPENDED, DELETED'),
+    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED', 'INACTIVE'])
+    .withMessage('Status must be one of: ACTIVE, SUSPENDED, DELETED, INACTIVE'),
   
   handleValidationErrors
 ];
@@ -138,11 +138,21 @@ const getUsersValidation = [
     .optional()
     .isIn(['SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER', 'CITIZEN'])
     .withMessage('Invalid user type filter'),
+
+  query('role')
+    .optional()
+    .isIn(['SUPER_ADMIN', 'ORG_ADMIN', 'VOLUNTEER', 'CITIZEN'])
+    .withMessage('Invalid role filter'),
+
+  query('isActive')
+    .optional()
+    .isIn(['true', 'false', true, false])
+    .withMessage('isActive filter must be a boolean'),
   
   query('status')
     .optional()
-    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED'])
-    .withMessage('Status filter must be one of: ACTIVE, SUSPENDED, DELETED'),
+    .isIn(['ACTIVE', 'SUSPENDED', 'DELETED', 'INACTIVE'])
+    .withMessage('Status filter must be one of: ACTIVE, SUSPENDED, DELETED, INACTIVE'),
   
   query('organizationId')
     .optional()

@@ -39,7 +39,7 @@ class UsersService {
       userType: userType || 'CITIZEN',
       roleId: role ? role._id : null,
       organizationId,
-      status,
+      status: status === 'INACTIVE' ? 'SUSPENDED' : status,
     });
 
     await user.save();
@@ -78,7 +78,7 @@ class UsersService {
     }
 
     if (status) {
-      query.status = status;
+      query.status = status === 'INACTIVE' ? 'SUSPENDED' : status;
     }
 
     if (organizationId) {
@@ -157,7 +157,7 @@ class UsersService {
     if (lastName !== undefined) user.lastName = lastName;
     if (userType !== undefined) user.userType = userType;
     if (organizationId !== undefined) user.organizationId = organizationId;
-    if (status !== undefined) user.status = status;
+    if (status !== undefined) user.status = status === 'INACTIVE' ? 'SUSPENDED' : status;
 
     await user.save();
 
@@ -328,7 +328,7 @@ class UsersService {
       email: user.email,
       userType: user.userType,
       organizationId: user.organizationId,
-      status: user.status,
+      status: user.status === 'SUSPENDED' ? 'INACTIVE' : user.status,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       organization: user.organizationId || null,

@@ -99,12 +99,11 @@ async function seedData() {
     logger.info('Seeding Users...');
     
     // SuperAdmin
-    const superAdminPassword = await hashPassword('Admin123!@#');
     const superAdmin = await new User({
       firstName: 'Himachal Forest',
       lastName: 'Super Admin',
       email: 'admin@school.com',
-      passwordHash: superAdminPassword,
+      passwordHash: 'Admin123!@#',
       roleId: superAdminRoleObj._id,
       userType: 'SUPER_ADMIN',
       status: 'ACTIVE',
@@ -112,12 +111,11 @@ async function seedData() {
     }).save();
 
     // OrgAdmin (NGO Lead)
-    const orgAdminPassword = await hashPassword('SchoolAdmin123!@#');
     const orgAdmin = await new User({
       firstName: 'Dharamsala NGO',
       lastName: 'Org Admin',
       email: 'schooladmin@school.com',
-      passwordHash: orgAdminPassword,
+      passwordHash: 'SchoolAdmin123!@#',
       roleId: orgAdminRoleObj._id,
       organizationId: kangraNgo._id,
       userType: 'ORG_ADMIN',
@@ -126,12 +124,11 @@ async function seedData() {
     }).save();
 
     // Volunteer (Field Guard)
-    const volunteerPassword = await hashPassword('Teacher123!@#');
     const volunteer = await new User({
       firstName: 'Palampur Guard',
       lastName: 'Volunteer',
       email: 'teacher@school.com',
-      passwordHash: volunteerPassword,
+      passwordHash: 'Teacher123!@#',
       roleId: volunteerRoleObj._id,
       organizationId: hpForestOrg._id,
       userType: 'VOLUNTEER',
@@ -140,12 +137,11 @@ async function seedData() {
     }).save();
 
     // Citizen (Local Farmer)
-    const citizenPassword = await hashPassword('Student123!@#');
     const citizen = await new User({
       firstName: 'Ramesh',
       lastName: 'Himalayan Farmer',
       email: 'student@school.com',
-      passwordHash: citizenPassword,
+      passwordHash: 'Student123!@#',
       roleId: citizenRoleObj._id,
       organizationId: kangraNgo._id,
       userType: 'CITIZEN',

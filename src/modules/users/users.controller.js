@@ -17,11 +17,17 @@ class UsersController {
    * Get users with pagination and filtering
    */
   getUsers = asyncHandler(async (req, res) => {
+    let status = req.query.status;
+    if (req.query.isActive !== undefined) {
+      const isActive = req.query.isActive === 'true' || req.query.isActive === true;
+      status = isActive ? 'ACTIVE' : 'INACTIVE';
+    }
+
     const filters = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 10,
-      userType: req.query.userType,
-      status: req.query.status,
+      userType: req.query.userType || req.query.role,
+      status: status,
       organizationId: req.query.organizationId || req.user?.organizationId,
       search: req.query.search,
       sortBy: req.query.sortBy || 'createdAt',

@@ -1,4 +1,4 @@
-﻿const { verifyAccessToken, extractTokenFromHeader } = require('../utils/jwt');
+const { verifyAccessToken, extractTokenFromHeader } = require('../utils/jwt');
 const { sendUnauthorized, sendForbidden } = require('../utils/response');
 const logger = require('../config/logger');
 const User = require('../models/User');
@@ -246,8 +246,8 @@ const optionalAuth = async (req, res, next) => {
  * Helper function to get all permissions for a user
  */
 async function getUserPermissions(userId) {
-  const userRoles = await UserRole.findActiveRolesForUser(userId);
-  const roleIds = userRoles.map(ur => ur.roleId._id);
+  const userRoles = await UserRole.find({ userId }).populate('roleId');
+  const roleIds = userRoles.filter(ur => ur.roleId).map(ur => ur.roleId._id);
   
   const rolePermissions = await RolePermission.find({
     roleId: { $in: roleIds },
