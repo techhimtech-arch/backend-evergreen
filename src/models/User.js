@@ -173,9 +173,14 @@ userSchema.index({ organizationId: 1, status: 1 });
 userSchema.index({ organizationId: 1, userType: 1 });
 userSchema.index({ status: 1, userType: 1 });
 
-// Pre-save middleware to hash password
-userSchema.pre('save', async function(next) {
+// Pre-validate middleware to hash password before validation
+userSchema.pre('validate', async function(next) {
   if (!this.isModified('passwordHash')) return next();
+  
+  // Skip if already a valid bcrypt hash (prevents double hashing)
+  if (this.passwordHash && this.passwordHash.startsWith('$2') && this.passwordHash.length === 60) {
+    return next();
+  }
   
   try {
     const salt = await bcrypt.genSalt(config.security.bcryptRounds);

@@ -16,9 +16,6 @@ class UsersService {
       throw new Error('User with this email already exists');
     }
 
-    // Hash password
-    const hashedPassword = await hashPassword(password);
-
     // Determine role based on userType
     const roleMapping = {
       'SUPER_ADMIN': 'SUPER_ADMIN',
@@ -35,7 +32,7 @@ class UsersService {
       firstName,
       lastName,
       email,
-      passwordHash: hashedPassword,
+      passwordHash: password, // Will be hashed by pre-save middleware
       userType: userType || 'CITIZEN',
       roleId: role ? role._id : null,
       organizationId,
