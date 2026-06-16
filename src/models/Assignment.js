@@ -9,6 +9,10 @@ const assignmentSchema = new mongoose.Schema({
   assignedOfficer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   organizationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true },
   
+  // Green Adoption fields
+  siteId: { type: mongoose.Schema.Types.ObjectId, ref: 'ForestSite' },
+  agreementId: { type: mongoose.Schema.Types.ObjectId, ref: 'AdoptionAgreement' },
+  
   // Status tracking
   status: { 
     type: String, 

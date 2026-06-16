@@ -7,7 +7,7 @@ const organizationSchema = new mongoose.Schema(
 
   organizationType: {
     type: String,
-    enum: ["GOVERNMENT", "NGO", "SCHOOL", "CSR"],
+    enum: ["GOVERNMENT", "NGO", "SCHOOL", "CSR", "CSR_COMPANY", "PSU", "TRUST"],
     required: true
   },
 
@@ -17,6 +17,13 @@ const organizationSchema = new mongoose.Schema(
 
   address: String,
   logo: String,
+  
+  // CSR specific fields
+  csrContactPerson: String,
+  csrEmail: String,
+  csrPhone: String,
+  annualCSRBudget: Number,
+  website: String,
 
   status: {
     type: String,
