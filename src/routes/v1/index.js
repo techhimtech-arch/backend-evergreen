@@ -20,6 +20,7 @@ router.use('/reports', require('../../modules/reports/reports.routes'));
 router.use('/nurseries', require('../../modules/nurseries/nurseries.routes'));
 router.use('/plant-requests', require('../../modules/plantRequests/plantRequests.routes'));
 router.use('/supply-dispatches', require('../../modules/supplyDispatches/supplyDispatches.routes'));
+router.use('/sponsors', require('../../modules/sponsors/sponsors.routes'));
 
 // Health check endpoint
 router.get('/health', (req, res) => {

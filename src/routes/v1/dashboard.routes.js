@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getDashboardStats } = require('../../controllers/dashboardController');
 const { authenticate } = require('../../middleware/auth.middleware');
+const { cacheMiddleware } = require('../../config/redis');
 
 /**
  * @swagger
@@ -15,6 +16,7 @@ const { authenticate } = require('../../middleware/auth.middleware');
  *       200:
  *         description: Dashboard statistics
  */
-router.get('/', authenticate, getDashboardStats);
+// Cache dashboard response for 15 minutes (900 seconds)
+router.get('/', authenticate, cacheMiddleware('dashboard:stats', 900), getDashboardStats);
 
 module.exports = router;
