@@ -17,6 +17,9 @@ router.use('/tree-monitoring', require('../../modules/treeMonitoring/treeMonitor
 router.use('/events', require('../../modules/plantationEvents/plantationEvents.routes'));
 router.use('/inspections', require('../../modules/inspections/inspections.routes'));
 router.use('/reports', require('../../modules/reports/reports.routes'));
+router.use('/nurseries', require('../../modules/nurseries/nurseries.routes'));
+router.use('/plant-requests', require('../../modules/plantRequests/plantRequests.routes'));
+router.use('/supply-dispatches', require('../../modules/supplyDispatches/supplyDispatches.routes'));
 
 // Health check endpoint
 router.get('/health', (req, res) => {
