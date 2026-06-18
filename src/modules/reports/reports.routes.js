@@ -35,7 +35,7 @@ const { authenticate } = require('../../middleware/auth.middleware');
  *       200:
  *         description: Summary report with overview, org-wise breakdown, monthly trend
  */
-router.get('/summary', authenticate, getSummaryReport);
+router.get('/summary', getSummaryReport);
 
 /**
  * @swagger

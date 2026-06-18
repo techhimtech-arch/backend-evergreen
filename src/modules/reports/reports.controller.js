@@ -160,7 +160,8 @@ exports.getSummaryReport = async (req, res) => {
       filters: { startDate, endDate, organizationId }
     });
   } catch (error) {
-    return sendError(res, 500, error.message);
+    console.error("Summary Report Error: ", error);
+    return sendError(res, 500, error.stack || error.message);
   }
 };
 
